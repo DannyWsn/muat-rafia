@@ -250,7 +250,7 @@
      mesin PDF, sehingga tombol Cetak dan tombol PDF menghasilkan bentuk yang sama.
      Lebar kolom Excel: A 57,75 pt, B..H 51,75 pt -> lebar lembar 420 pt.
      Tepi kolom: A 0 | B 57,75 | C 109,5 | D 161,25 | E 213 | F 264,75 | G 316,5 | H 368,25 | 420 */
-  .ps{position:relative;width:420pt;height:734pt;color:#000;background:#fff;
+  .ps{position:relative;width:420pt;height:734pt;margin:0 auto;color:#000;background:#fff;
     font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ps-logo{position:absolute;left:0;top:0;width:143.6pt;height:114.16pt;object-fit:contain}
@@ -690,8 +690,13 @@
        menempel di margin kiri — persis seperti yang dicetak Excel. */
     function buat(d){
       var k = new K();
-      var ML = 50.4, MT = 54, MB = 54;              /* margin Excel: 0,7 dan 0,75 inci */
-      var cNo = 57.75, cD = 51.75, TW = cNo + 7*cD, TR = ML + TW;
+      var MT = 54, MB = 54;                         /* margin atas/bawah Excel: 0,75 inci */
+      var cNo = 57.75, cD = 51.75, TW = cNo + 7*cD; /* lebar lembar tepat 420 pt */
+      /* Excel menempelkan tabel di margin kiri (0,7 inci) sehingga sisa ruang
+         menumpuk di kanan dan lembarnya terlihat miring ke kiri. Di sini seluruh
+         lembar dipusatkan pada lebar kertas. Semua koordinat lain relatif ke ML,
+         jadi cukup satu angka ini yang menentukan. */
+      var ML = (PW - TW) / 2, TR = ML + TW;
       function Y(t){ return PH - MT - t; }
 
       var HITAM = [0,0,0], BIRU_KEPALA = [0, 0.6902, 0.9412];   /* #00B0F0 */
