@@ -289,12 +289,12 @@
   .ps-f.nilai{font-weight:400}
   .ps-r36{top:564pt}
   .ps-r37{top:579pt}
-  .ps-kiri{left:0}
-  .ps-isi{left:69.48pt}                    /* kolom B */
-  .ps-labkanan{left:0;width:380.78pt;text-align:right}   /* rata kanan di kolom F */
-  .ps-nilG{left:383.78pt}
-  .ps-nilGc{left:380.78pt;width:62.26pt;text-align:center}
-  .ps-nilH{left:446.04pt}
+  /* Dua blok bersusunan sama: label · "=" · nilai · satuan, pada jarak yang
+     sama dari pangkal blok, supaya "=" dan angkanya lurus ke bawah.
+     Pangkal blok kiri 0, pangkal blok kanan 318,52 (tepi kiri kolom F). */
+  .ps-k1{left:0}          .ps-k2{left:66pt}      .ps-k3{left:75pt}
+  .ps-n1{left:318.52pt}   .ps-n2{left:384.52pt}  .ps-n3{left:393.52pt}
+  .ps-n4{left:439.52pt}
   .ps-s{position:absolute;white-space:nowrap;font-size:12pt;font-weight:700;line-height:16pt;text-align:center}
   .ps-sAB{left:0;width:131.74pt}           /* pusat kolom A..B */
   .ps-sFH{left:318.52pt;width:186.76pt}    /* pusat kolom F..H */
@@ -798,26 +798,29 @@
          Excel menaruh PENERIMA dan NO TRUK di kiri, TOTAL ROLL dan TONASE di kanan. */
       var fs = hv(11);
       function fb(t, h){ return Y(t + h/2 + fs*0.35); }
-      var xB = ML + cNo;                       /* nilai mulai di kolom B */
-      var xF2 = ML + cNo + 5*cD;               /* tepi kanan kolom F: label rata kanan */
-      var xG = xF2, xGc = xF2 + cD/2, xH = xF2 + cD;
 
+      /* Dua blok dengan susunan sama: label, tanda "=", lalu nilai — semuanya
+         pada jarak yang sama dari pangkal bloknya, jadi tanda "=" dan angkanya
+         lurus ke bawah. Spasi penyelaras bawaan Excel ("NO TRUK     =") dibuang:
+         itu hanya lurus di Calibri, tidak di huruf PDF. */
+      var bKiri = ML, bKanan = ML + cNo + 4*cD;
+      var oSama = 66, oNilai = 75, oSatuan = 121;
+      function barisBawah(x, t, label, nilai, satuan, tebalNilai){
+        k.teks(label,  x,            fb(t,15), fs, true, "l");
+        k.teks("=",    x + oSama,    fb(t,15), fs, true, "l");
+        k.teks(nilai,  x + oNilai,   fb(t,15), fs, tebalNilai, "l");
+        if(satuan) k.teks(satuan, x + oSatuan, fb(t,15), fs, true, "l");
+      }
       k.iWarna(HITAM);
-      k.teks("PENERIMA =",  ML, fb(564,15), fs, true, "l");
-      k.teks(d.penerima || "", xB, fb(564,15), fs, false, "l");
-      k.teks("NO TRUK     =", ML, fb(579,15), fs, true, "l");
-      k.teks(d.noTruk || "",  xB, fb(579,15), fs, true, "l");
-
-      k.teks("TOTAL ROLL  =", xF2, fb(564,15), fs, true, "r");
-      k.teks(String(d.roll),  xG + 3, fb(564,15), fs, true, "l");
-      k.teks("TONASE           =", xF2, fb(579,15), fs, true, "r");
-      k.teks(d.tonaseTeks, xGc, fb(579,15), fs, true, "c");
-      k.teks("KG", xH + 3, fb(579,15), fs, true, "l");
+      barisBawah(bKiri,  564, "PENERIMA",   d.penerima || "", "",   false);
+      barisBawah(bKiri,  579, "NO TRUK",    d.noTruk   || "", "",   true);
+      barisBawah(bKanan, 564, "TOTAL ROLL", String(d.roll),   "",   true);
+      barisBawah(bKanan, 579, "TONASE",     d.tonaseTeks,     "KG", true);
 
       /* ---------- tanda tangan ---------- */
       var ss = hv(12);
       var cxAB = (ML + ML + cNo + cD) / 2;     /* pusat A..B */
-      var cxFH = (xF2 - cD + TR) / 2;          /* pusat F..H */
+      var cxFH = (bKanan + TR) / 2;            /* pusat F..H */
       function sb(t, h){ return Y(t + h/2 + ss*0.35); }
       k.teks(d.kop.kota + ", " + d.tanggalPanjang, cxFH, sb(624,16), ss, true, "c");
       k.teks("Penerima,",    cxAB, sb(640,16), ss, true, "c");
@@ -1460,15 +1463,19 @@
       '<div class="ps-tab ps-tabA">' + psTable(w,0) + '</div>' +
       '<div class="ps-tab ps-tabB">' + psTable(w,7) + '</div>' +
 
-      '<div class="ps-f ps-r36 ps-kiri">PENERIMA =</div>' +
-      '<div class="ps-f ps-r36 ps-isi nilai">' + esc(rec.penerima) + '</div>' +
-      '<div class="ps-f ps-r37 ps-kiri">NO TRUK     =</div>' +
-      '<div class="ps-f ps-r37 ps-isi">' + esc(rec.noTruk) + '</div>' +
-      '<div class="ps-f ps-r36 ps-labkanan">TOTAL ROLL  =</div>' +
-      '<div class="ps-f ps-r36 ps-nilG">' + roll + '</div>' +
-      '<div class="ps-f ps-r37 ps-labkanan">TONASE           =</div>' +
-      '<div class="ps-f ps-r37 ps-nilGc">' + fmtSen(totalSen) + '</div>' +
-      '<div class="ps-f ps-r37 ps-nilH">KG</div>' +
+      '<div class="ps-f ps-r36 ps-k1">PENERIMA</div>' +
+      '<div class="ps-f ps-r36 ps-k2">=</div>' +
+      '<div class="ps-f ps-r36 ps-k3 nilai">' + esc(rec.penerima) + '</div>' +
+      '<div class="ps-f ps-r37 ps-k1">NO TRUK</div>' +
+      '<div class="ps-f ps-r37 ps-k2">=</div>' +
+      '<div class="ps-f ps-r37 ps-k3">' + esc(rec.noTruk) + '</div>' +
+      '<div class="ps-f ps-r36 ps-n1">TOTAL ROLL</div>' +
+      '<div class="ps-f ps-r36 ps-n2">=</div>' +
+      '<div class="ps-f ps-r36 ps-n3">' + roll + '</div>' +
+      '<div class="ps-f ps-r37 ps-n1">TONASE</div>' +
+      '<div class="ps-f ps-r37 ps-n2">=</div>' +
+      '<div class="ps-f ps-r37 ps-n3">' + fmtSen(totalSen) + '</div>' +
+      '<div class="ps-f ps-r37 ps-n4">KG</div>' +
 
       '<div class="ps-s ps-sFH" style="top:624pt">' + esc(kop.kota) + ', ' + esc(tglPanjang(rec.tanggal)) + '</div>' +
       '<div class="ps-s ps-sAB" style="top:640pt">Penerima,</div>' +
