@@ -245,24 +245,28 @@
 
   /* ================= LEMBAR CETAK ================= */
   #print-root{display:none}
-  /* Tata letak meniru lembar "PRINT MUATAN" pada MASTER RINCIAN MUATAN.xlsx.
-     Semua ukuran dalam titik (1/72 inci) memakai angka yang sama persis dengan
-     mesin PDF, sehingga tombol Cetak dan tombol PDF menghasilkan bentuk yang sama.
-     Lebar kolom Excel: A 57,75 pt, B..H 51,75 pt -> lebar lembar 420 pt.
-     Tepi kolom: A 0 | B 57,75 | C 109,5 | D 161,25 | E 213 | F 264,75 | G 316,5 | H 368,25 | 420 */
-  .ps{position:relative;width:420pt;height:734pt;margin:0 auto;color:#000;background:#fff;
+  /* Isi (teks, logo, tabel) meniru lembar "PRINT MUATAN" pada MASTER RINCIAN
+     MUATAN.xlsx; letaknya dirapikan. Semua ukuran dalam titik (1/72 inci) dan
+     memakai angka yang sama persis dengan mesin PDF, sehingga tombol Cetak dan
+     tombol PDF menghasilkan bentuk yang sama.
+
+     Lebar kolom Excel (A 57,75 · B..H 51,75 · total 420) diskalakan 1,20305
+     supaya lembarnya memenuhi kertas dengan margin 45 pt: A 69,48 · B..H 62,26
+     · total 505,28. Perbandingan antar kolom tidak berubah.
+     Tepi kolom: 0 | 69,48 | 131,74 | 194 | 256,26 | 318,52 | 380,78 | 443,04 | 505,28 */
+  .ps{position:relative;width:505.28pt;height:734pt;margin:0 auto;color:#000;background:#fff;
     font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .ps-logo{position:absolute;left:0;top:0;width:143.6pt;height:114.16pt;object-fit:contain}
-  .ps-t{position:absolute;left:109.5pt;width:310.5pt;text-align:center;white-space:nowrap}
+  .ps-logo{position:absolute;left:0;top:15.8pt;width:120pt;height:95.4pt;object-fit:contain}
+  .ps-t{position:absolute;left:0;width:505.28pt;text-align:center;white-space:nowrap}
   .ps-t1{top:15pt;line-height:21pt;font-size:16pt;font-weight:700}
   .ps-t2{top:36pt;line-height:30pt;font-size:30pt;font-weight:700}
   .ps-t3{top:66pt;line-height:15pt;font-size:10pt}
   .ps-t4{top:81pt;line-height:15pt;font-size:10pt}
   .ps-t5{top:96pt;line-height:15pt;font-size:11pt;font-weight:700}
-  .ps-rule{position:absolute;left:0;top:124pt;width:420pt;border-bottom:3pt double #000}
+  .ps-rule{position:absolute;left:0;top:124pt;width:505.28pt;border-bottom:3pt double #000}
 
-  .ps-tab{position:absolute;left:0;width:420pt}
+  .ps-tab{position:absolute;left:0;width:505.28pt}
   .ps-tabA{top:144pt}
   .ps-tabB{top:354pt}
   /* Tinggi baris dikunci lewat line-height, bukan height: pada tabel yang
@@ -270,7 +274,7 @@
      ditambahkan di atasnya. Angka di bawah sudah dikurangi tebal garisnya
      (diukur di Chrome: kepala 1,5 pt, data 1,125 pt, JUMLAH 1,5 pt), sehingga
      tinggi jadi tepat 17 / 16,1 / 16 pt seperti baris Excel. */
-  .ps-table{width:420pt;border-collapse:collapse;table-layout:fixed}
+  .ps-table{width:505.28pt;border-collapse:collapse;table-layout:fixed}
   .ps-table th,.ps-table td{border:1.5pt solid #000;text-align:center;vertical-align:middle;
     padding:0;line-height:14.975pt;font-size:11pt;font-variant-numeric:tabular-nums}
   .ps-table thead th{background:#00B0F0;line-height:15.5pt;font-size:12pt;font-weight:700}
@@ -286,16 +290,14 @@
   .ps-r36{top:564pt}
   .ps-r37{top:579pt}
   .ps-kiri{left:0}
-  /* label "PENERIMA =" / "NO TRUK     =" sedikit lebih lebar dari kolom A,
-     jadi nilainya dimulai 66pt supaya tidak menempel */
-  .ps-isi{left:66pt}
-  .ps-labkanan{left:0;width:316.5pt;text-align:right}
-  .ps-nilG{left:319.5pt}
-  .ps-nilGc{left:316.5pt;width:51.75pt;text-align:center}
-  .ps-nilH{left:371.25pt}
+  .ps-isi{left:69.48pt}                    /* kolom B */
+  .ps-labkanan{left:0;width:380.78pt;text-align:right}   /* rata kanan di kolom F */
+  .ps-nilG{left:383.78pt}
+  .ps-nilGc{left:380.78pt;width:62.26pt;text-align:center}
+  .ps-nilH{left:446.04pt}
   .ps-s{position:absolute;white-space:nowrap;font-size:12pt;font-weight:700;line-height:16pt;text-align:center}
-  .ps-sAB{left:0;width:109.5pt}
-  .ps-sFH{left:264.75pt;width:155.25pt}
+  .ps-sAB{left:0;width:131.74pt}           /* pusat kolom A..B */
+  .ps-sFH{left:318.52pt;width:186.76pt}    /* pusat kolom F..H */
   .ps-ttd{font-weight:400;top:718.89pt}
 
   @media print{
@@ -691,11 +693,14 @@
     function buat(d){
       var k = new K();
       var MT = 54, MB = 54;                         /* margin atas/bawah Excel: 0,75 inci */
-      var cNo = 57.75, cD = 51.75, TW = cNo + 7*cD; /* lebar lembar tepat 420 pt */
-      /* Excel menempelkan tabel di margin kiri (0,7 inci) sehingga sisa ruang
-         menumpuk di kanan dan lembarnya terlihat miring ke kiri. Di sini seluruh
-         lembar dipusatkan pada lebar kertas. Semua koordinat lain relatif ke ML,
-         jadi cukup satu angka ini yang menentukan. */
+
+      /* Isi lembar (teks, logo, tabel) mengikuti Excel; letaknya dirapikan.
+         Excel memakai lebar tabel 420 pt yang menempel di margin kiri, menyisakan
+         ruang kosong 74 pt di kanan. Di sini tabelnya dilebarkan sampai margin
+         45 pt kiri-kanan — perbandingan lebar antar kolom tetap sama persis
+         dengan Excel, hanya skalanya yang berubah. */
+      var SKALA = (PW - 90) / 420;                  /* 420 = lebar tabel di Excel */
+      var cNo = 57.75 * SKALA, cD = 51.75 * SKALA, TW = cNo + 7*cD;
       var ML = (PW - TW) / 2, TR = ML + TW;
       function Y(t){ return PH - MT - t; }
 
@@ -708,18 +713,20 @@
       function hv(pt){ return pt * 0.846; }
 
       /* ---------- logo ----------
-         Bingkai gambar di Excel: 1823562 x 1447798 EMU = 143,6 x 114,2 pt,
-         menempel di sudut kiri-atas daerah cetak. */
-      var logoW = 143.6, logoH = logoW * LOGO_H / LOGO_W;
-      k.gambar("Im1", ML, Y(logoH), logoW, logoH);
+         Perbandingan sisi mengikuti bingkai di Excel (143,6 x 114,2 pt), tetapi
+         sedikit diperkecil supaya teks kop bisa benar-benar di tengah lembar
+         tanpa menabraknya. Ditaruh rata kiri, di tengah tinggi blok kop. */
+      var logoW = 120, logoH = logoW * LOGO_H / LOGO_W;
+      var logoT = (127 - logoH) / 2;
+      k.gambar("Im1", ML, Y(logoT + logoH), logoW, logoH);
 
       /* ---------- kop ----------
-         Excel memusatkan teks kop pada kolom C..H, bukan pada seluruh lebar. */
-      var kolC = ML + cNo + cD, cxKop = kolC + (TR - kolC) / 2;
+         Excel memusatkan teks kop pada kolom C..H saja, sehingga terlihat lari
+         ke kanan. Di sini dipusatkan pada lebar lembar. */
+      var cxKop = ML + TW / 2;
 
-      /* Di Excel baris alamat sebenarnya menyenggol kotak logo sekitar 2 pt.
-         Di sini teks dibatasi supaya berhenti tepat sebelum logo. */
-      var lebarAman = 2 * (cxKop - (ML + logoW + 3));
+      /* batas supaya teks kop berhenti sebelum logo */
+      var lebarAman = 2 * (cxKop - (ML + logoW + 8));
 
       /* Ukuran huruf: pakai ukuran Excel, tetapi jangan pernah lebih lebar
          daripada yang dihasilkan Calibri di sana — itu pula yang menjaga teks
@@ -791,9 +798,7 @@
          Excel menaruh PENERIMA dan NO TRUK di kiri, TOTAL ROLL dan TONASE di kanan. */
       var fs = hv(11);
       function fb(t, h){ return Y(t + h/2 + fs*0.35); }
-      /* Label "PENERIMA =" dan "NO TRUK     =" sedikit lebih lebar dari kolom A
-         (57,75 pt), jadi nilainya dimulai 66 pt supaya tidak menempel. */
-      var xB = ML + 66;
+      var xB = ML + cNo;                       /* nilai mulai di kolom B */
       var xF2 = ML + cNo + 5*cD;               /* tepi kanan kolom F: label rata kanan */
       var xG = xF2, xGc = xF2 + cD/2, xH = xF2 + cD;
 
@@ -1432,9 +1437,9 @@
       }
       sums += '<td>' + (ada ? fmtSen(s) : "") + '</td>';
     }
-    /* lebar kolom dikunci sesuai Excel: A 57,75 pt, sisanya 51,75 pt */
-    var cols = '<col style="width:57.75pt">';
-    for(var ci=0;ci<7;ci++) cols += '<col style="width:51.75pt">';
+    /* lebar kolom: perbandingan Excel (57,75 : 51,75) diskalakan 1,20305 */
+    var cols = '<col style="width:69.48pt">';
+    for(var ci=0;ci<7;ci++) cols += '<col style="width:62.26pt">';
     return '<table class="ps-table"><colgroup>' + cols + '</colgroup>' +
       '<thead><tr><th>NO</th>' + heads + '</tr></thead><tbody>' + body +
       '<tr class="ps-sum"><td>JUMLAH</td>' + sums + '</tr></tbody></table>';
