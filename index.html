@@ -61,7 +61,9 @@
   /* ---------- top bar ---------- */
   .topbar{position:sticky;top:0;z-index:30;background:var(--navy);color:#EAF1F9;border-bottom:2px solid var(--gold)}
   .brand{display:flex;align-items:center;gap:10px;padding:8px 12px;max-width:900px;margin:0 auto}
-  .brand .mark{width:34px;height:34px;flex:none}
+  /* logo asli beralas putih, jadi diberi keping putih supaya tetap terbaca di tema gelap */
+  .brand .mark{width:43px;height:34px;flex:none;background:#fff;border-radius:3px;padding:2px;box-sizing:border-box}
+  .brand .mark img{width:100%;height:100%;object-fit:contain}
   .brand-txt{min-width:0}
   .brand-name{font-family:var(--f-cond);font-weight:700;letter-spacing:.06em;font-size:17px;line-height:1.1;
     text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -243,34 +245,62 @@
 
   /* ================= LEMBAR CETAK ================= */
   #print-root{display:none}
-  .ps{color:#000;background:#fff;font-family:var(--f-ui);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .ps-head{display:flex;align-items:center;gap:5mm;padding-bottom:2mm}
-  .ps-mark{width:22mm;height:22mm;flex:none}
-  .ps-titles{flex:1;text-align:center}
-  .ps-t1{font-family:var(--f-cond);font-size:11pt;font-weight:700;letter-spacing:.22em;text-transform:uppercase}
-  .ps-t2{font-family:var(--f-cond);font-size:27pt;font-weight:700;letter-spacing:.02em;text-transform:uppercase;line-height:1.02}
-  .ps-t3{font-size:8.5pt;line-height:1.3}
-  .ps-rule{border-bottom:0.8mm solid #17529B;margin-bottom:3.5mm}
-  .ps-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:3mm}
-  .ps-table th,.ps-table td{border:0.3mm solid #17529B;height:6.1mm;padding:0 1mm;text-align:center;
-    vertical-align:middle;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:8.5pt}
-  .ps-table th{font-family:var(--f-cond);font-size:9.5pt;font-weight:700;letter-spacing:.04em}
-  .ps-table .ps-c1{width:9%}
-  .ps-table tr.ps-sum td{font-weight:700}
-  .ps-table tr.ps-sum td:first-child{font-family:var(--f-cond);font-size:9pt;letter-spacing:.06em}
-  .ps-foot{display:flex;gap:8mm;margin-top:5mm;font-size:10pt}
-  .ps-foot-col{flex:1}
-  .ps-line{display:flex;gap:2mm;padding:0.6mm 0}
-  .ps-lab{font-family:var(--f-cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;width:32mm;flex:none}
-  .ps-val{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700}
-  .ps-val.txt{font-family:var(--f-ui);font-weight:600}
-  .ps-sign{display:flex;margin-top:7mm;font-size:10pt}
-  .ps-sign-col{flex:1}
-  .ps-sign-col.r{text-align:right}
-  .ps-gap{height:20mm}
+  /* Tata letak meniru lembar "PRINT MUATAN" pada MASTER RINCIAN MUATAN.xlsx.
+     Semua ukuran dalam titik (1/72 inci) memakai angka yang sama persis dengan
+     mesin PDF, sehingga tombol Cetak dan tombol PDF menghasilkan bentuk yang sama.
+     Lebar kolom Excel: A 57,75 pt, B..H 51,75 pt -> lebar lembar 420 pt.
+     Tepi kolom: A 0 | B 57,75 | C 109,5 | D 161,25 | E 213 | F 264,75 | G 316,5 | H 368,25 | 420 */
+  .ps{position:relative;width:420pt;height:734pt;color:#000;background:#fff;
+    font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ps-logo{position:absolute;left:0;top:0;width:143.6pt;height:114.16pt;object-fit:contain}
+  .ps-t{position:absolute;left:109.5pt;width:310.5pt;text-align:center;white-space:nowrap}
+  .ps-t1{top:15pt;line-height:21pt;font-size:16pt;font-weight:700}
+  .ps-t2{top:36pt;line-height:30pt;font-size:30pt;font-weight:700}
+  .ps-t3{top:66pt;line-height:15pt;font-size:10pt}
+  .ps-t4{top:81pt;line-height:15pt;font-size:10pt}
+  .ps-t5{top:96pt;line-height:15pt;font-size:11pt;font-weight:700}
+  .ps-rule{position:absolute;left:0;top:124pt;width:420pt;border-bottom:3pt double #000}
+
+  .ps-tab{position:absolute;left:0;width:420pt}
+  .ps-tabA{top:144pt}
+  .ps-tabB{top:354pt}
+  /* Tinggi baris dikunci lewat line-height, bukan height: pada tabel yang
+     border-collapse, "height" hanya jadi tinggi minimum dan tebal garis masih
+     ditambahkan di atasnya. Angka di bawah sudah dikurangi tebal garisnya
+     (diukur di Chrome: kepala 1,5 pt, data 1,125 pt, JUMLAH 1,5 pt), sehingga
+     tinggi jadi tepat 17 / 16,1 / 16 pt seperti baris Excel. */
+  .ps-table{width:420pt;border-collapse:collapse;table-layout:fixed}
+  .ps-table th,.ps-table td{border:1.5pt solid #000;text-align:center;vertical-align:middle;
+    padding:0;line-height:14.975pt;font-size:11pt;font-variant-numeric:tabular-nums}
+  .ps-table thead th{background:#00B0F0;line-height:15.5pt;font-size:12pt;font-weight:700}
+  .ps-table tbody td{border-top-width:0.75pt;border-bottom-width:0.75pt}
+  .ps-table tbody td:first-child{font-size:12pt;font-weight:700}
+  .ps-table tbody tr:first-child td{border-top-width:1.5pt}
+  .ps-table tbody tr.ps-sum td{border-top-width:1.5pt;border-bottom-width:1.5pt;
+    line-height:14.496pt;font-size:11pt;font-weight:700}
+
+  /* blok bawah: PENERIMA/NO TRUK di kiri, TOTAL ROLL/TONASE di kanan */
+  .ps-f{position:absolute;white-space:nowrap;font-size:11pt;font-weight:700;line-height:15pt}
+  .ps-f.nilai{font-weight:400}
+  .ps-r36{top:564pt}
+  .ps-r37{top:579pt}
+  .ps-kiri{left:0}
+  /* label "PENERIMA =" / "NO TRUK     =" sedikit lebih lebar dari kolom A,
+     jadi nilainya dimulai 66pt supaya tidak menempel */
+  .ps-isi{left:66pt}
+  .ps-labkanan{left:0;width:316.5pt;text-align:right}
+  .ps-nilG{left:319.5pt}
+  .ps-nilGc{left:316.5pt;width:51.75pt;text-align:center}
+  .ps-nilH{left:371.25pt}
+  .ps-s{position:absolute;white-space:nowrap;font-size:12pt;font-weight:700;line-height:16pt;text-align:center}
+  .ps-sAB{left:0;width:109.5pt}
+  .ps-sFH{left:264.75pt;width:155.25pt}
+  .ps-ttd{font-weight:400;top:718.89pt}
 
   @media print{
-    @page{size:A4 portrait;margin:11mm}
+    /* margin sama dengan pengaturan cetak Excel: 0,7 inci kiri/kanan, 0,75 inci atas/bawah */
+    @page{size:A4 portrait;margin:0.75in 0.7in}
     html,body{background:#fff !important;margin:0}
     body>*:not(#print-root){display:none !important}
     #print-root{display:block !important}
@@ -345,8 +375,8 @@
             <label class="f wide"><span class="f-lab">Nama Perusahaan</span><input type="text" id="k-nama"></label>
             <label class="f wide"><span class="f-lab">Alamat Baris 1</span><input type="text" id="k-al1"></label>
             <label class="f wide"><span class="f-lab">Alamat Baris 2</span><input type="text" id="k-al2"></label>
+            <label class="f wide"><span class="f-lab">Alamat Baris 3</span><input type="text" id="k-al3"></label>
             <label class="f"><span class="f-lab">Kota Tanda Tangan</span><input type="text" id="k-kota"></label>
-            <label class="f"><span class="f-lab">Teks Lingkar Logo</span><input type="text" id="k-ring"></label>
           </div>
         </div>
       </details>
@@ -417,13 +447,32 @@
       LS_TAB = "wavi_muat_tab_v1", LS_PDFHINT = "wavi_muat_pdfhint_v1";
   var BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
+  /* Kop mengikuti lembar "PRINT MUATAN" pada MASTER RINCIAN MUATAN.xlsx:
+     tiga baris terpisah, telepon berdiri sendiri di baris ketiga. */
   var KOP_DEFAULT = {
     nama: "WAVI RAFIA GRUP",
-    al1: "Belakang SPBU Pasar Banggi Jl. Raya Lasem – Rembang KM 05",
-    al2: "Ds. Pasar Banggi – Telp/WA Wahyu: 082298160372",
-    kota: "Rembang",
-    ring: "WAVI ADHIKARI CENDANA"
+    al1: "Belakang SPBU Pasar Banggi Jl.Raya Lasem - Rembang KM 05",
+    al2: "Ds.Pasar Banggi",
+    al3: "Telp / WA : 0822 - 9816 - 0372",
+    kota: "Rembang"
   };
+
+  /* Kop versi lama hanya punya dua baris, dengan telepon menempel di al2.
+     Kalau isinya masih persis bawaan lama, ganti ke bentuk tiga baris.
+     Kop yang sudah diubah sendiri oleh pengguna dibiarkan apa adanya. */
+  var KOP_LAMA = {
+    al1: "Belakang SPBU Pasar Banggi Jl. Raya Lasem – Rembang KM 05",
+    al2: "Ds. Pasar Banggi – Telp/WA Wahyu: 082298160372"
+  };
+  function migrasiKop(k){
+    if(k.al3 != null) return k;
+    if(k.al1 === KOP_LAMA.al1 && k.al2 === KOP_LAMA.al2){
+      k.al1 = KOP_DEFAULT.al1; k.al2 = KOP_DEFAULT.al2; k.al3 = KOP_DEFAULT.al3;
+    }else{
+      k.al3 = "";                 /* kop sudah disetel sendiri: jangan diutak-atik */
+    }
+    return k;
+  }
 
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
@@ -481,27 +530,30 @@
     return m ? m[3] + "/" + m[2] + "/" + m[1] : "";
   }
 
-  function logoSVG(ringText, cBlue, cGold, cInk){
-    var top = "WAVI", rest = String(ringText || "").replace(/^WAVI\s*/i,"") || "ADHIKARI CENDANA";
-    return '<svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="Logo perusahaan">' +
-      '<defs><path id="arcT" d="M 16,50 A 34,34 0 0 1 84,50" fill="none"/>' +
-      '<path id="arcB" d="M 17.5,50 A 32.5,32.5 0 0 0 82.5,50" fill="none"/></defs>' +
-      '<circle cx="50" cy="50" r="48" fill="none" stroke="' + cGold + '" stroke-width="2.5"/>' +
-      '<circle cx="50" cy="50" r="43" fill="none" stroke="' + cBlue + '" stroke-width="1.2"/>' +
-      '<text font-family="Arial Narrow, Roboto Condensed, Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="2.2" fill="' + cBlue + '">' +
-        '<textPath href="#arcT" startOffset="50%" text-anchor="middle">' + esc(top) + '</textPath></text>' +
-      '<text font-family="Arial Narrow, Roboto Condensed, Arial, sans-serif" font-size="7.2" font-weight="700" letter-spacing="1.4" fill="' + cBlue + '">' +
-        '<textPath href="#arcB" startOffset="50%" text-anchor="middle">' + esc(rest) + '</textPath></text>' +
-      '<path d="M 22,62 H 78" stroke="' + cGold + '" stroke-width="2" stroke-linecap="round"/>' +
-      '<text x="50" y="58" text-anchor="middle" font-family="Arial Narrow, Roboto Condensed, Arial, sans-serif" ' +
-        'font-size="27" font-weight="700" fill="' + cInk + '">WAC</text></svg>';
+  /* ==UJI-PDF-MULAI== (penanda untuk uji-pdf.js — jangan dihapus) */
+
+  /* ---------- logo perusahaan ----------
+     Gambar asli, diambil dari lembar "PRINT MUATAN" pada MASTER RINCIAN
+     MUATAN.xlsx dan dipotong sesuai bingkai yang dipakai di sana.
+     JPEG baseline 400x318 px, sudah dialas putih (kertas selalu putih).
+
+     Disimpan satu kali sebagai base64. Layar dan pratinjau cetak memakainya
+     langsung sebagai data URI; mesin PDF menyandinya ulang jadi heksa supaya
+     berkas PDF tetap ASCII murni (lihat catatan di penyusun PDF). */
+  var LOGO_W = 400, LOGO_H = 318;
+  var LOGO_B64 = "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kktjoeenWt39oHRP7W8AT3Uabp9NkFwp/wBno36HP4V578OJdf8Ah18Q7nwze2t1c6XdSiMvHEzLz9yUYHoefx9K+hNRtIr+wubGdQ0VxE0bg+hGKivJwrqpe/UujFTouna3Q87/AGfdb/tXwDFaSPmbTZDAR/s9V/Q4/CvTK80+Efw71LwPd6jLdarDcw3ahRDEp4wThiT3wT+del1z4hxdRuD0N6HMqaUtziviN8O9I8bQI9wzWmoQjEV1GuTj+6w7j+Ved2XwR8Qqosrnxm66bnBhh8zBH+6Ttr3minDEVIR5U9BTw9Ob5mtTm/BHgzRPB1g1rpUJMkuDNcSHMkpHqew9hXSUUVjKTk7vc2jFRVkFFFFSMKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACqOsaRpetWotdWsIL6AHcEnQMAfUelXqKabWqE0noytptjZ6ZYw2NhbpbWsI2xxIMBRnPFZWl+EfDml6xNrNhpUMOoTFi84ySdxy3U8Zreop80tddxcq002CuV0bwD4Y0bxDJ4g02xeC/k37mEzFfm6/LnFdVRQpSimk9wcU9WiK6t4Lu3ktrqFJ4ZBh45F3Kw9CDTLCxstPgFvY2sNrCDnZCgUfkKsUUrvYduod896KKKQwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//9k=";
+  var LOGO_URI = "data:image/jpeg;base64," + LOGO_B64;
+
+  function logoIMG(cls){
+    return '<img class="' + cls + '" src="' + LOGO_URI + '" width="' + LOGO_W +
+      '" height="' + LOGO_H + '" alt="Logo Wavi Adhikari Cendana">';
   }
 
   /* ================= PENYUSUN PDF MANDIRI =================
      Menyusun berkas PDF sendiri lalu mengunduhnya. Tidak memakai dialog cetak,
      sehingga tetap jalan walau aplikasi dibuka di dalam bingkai terkunci. */
   var PDF = (function(){
-    var PW = 595.28, PH = 841.89, MG = 32, CW = PW - 2*MG;
+    var PW = 595.28, PH = 841.89;                  /* A4 tegak, satuan titik (1/72 inci) */
     var W_REG = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,
       556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,
       667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,
@@ -552,53 +604,63 @@
       if(tc) this.p("0 Tc");
       this.p("ET");
     };
-    K.prototype.lingkaran = function(cx, cy, r){
-      var k = 0.5523 * r;
-      this.p(nn(cx+r)+" "+nn(cy)+" m");
-      this.p(nn(cx+r)+" "+nn(cy+k)+" "+nn(cx+k)+" "+nn(cy+r)+" "+nn(cx)+" "+nn(cy+r)+" c");
-      this.p(nn(cx-k)+" "+nn(cy+r)+" "+nn(cx-r)+" "+nn(cy+k)+" "+nn(cx-r)+" "+nn(cy)+" c");
-      this.p(nn(cx-r)+" "+nn(cy-k)+" "+nn(cx-k)+" "+nn(cy-r)+" "+nn(cx)+" "+nn(cy-r)+" c");
-      this.p(nn(cx+k)+" "+nn(cy-r)+" "+nn(cx+r)+" "+nn(cy-k)+" "+nn(cx+r)+" "+nn(cy)+" c");
-      this.p("S");
+    K.prototype.kotak = function(x, y, w, h){
+      this.p(nn(x)+" "+nn(y)+" "+nn(w)+" "+nn(h)+" re f");
     };
-    K.prototype.teksLingkar = function(s, cx, cy, r, size, bold, atas, tc){
-      var t = ascii(s);
-      if(!t) return;
-      var T = bold ? W_BOLD : W_REG, i, lw = [], total = 0;
-      for(i=0;i<t.length;i++){
-        var c = t.charCodeAt(i);
-        var w = ((c >= 32 && c <= 126) ? T[c-32] : 556) * size / 1000 + (tc || 0);
-        lw.push(w); total += w;
-      }
-      var span = total / r;
-      var a = atas ? (Math.PI/2 + span/2) : (-Math.PI/2 - span/2);
-      var arah = atas ? -1 : 1;
-      this.p("BT");
-      this.p("/" + (bold ? "F2" : "F1") + " " + nn(size) + " Tf");
-      for(i=0;i<t.length;i++){
-        var da = lw[i] / r, am = a + arah * da / 2;
-        var th = atas ? (am - Math.PI/2) : (am + Math.PI/2);
-        var co = Math.cos(th), si = Math.sin(th);
-        var px = cx + r * Math.cos(am) - co * lw[i] / 2;
-        var py = cy + r * Math.sin(am) - si * lw[i] / 2;
-        this.p(nn(co)+" "+nn(si)+" "+nn(-si)+" "+nn(co)+" "+nn(px)+" "+nn(py)+" Tm");
-        this.p("("+escp(t.charAt(i))+") Tj");
-        a += arah * da;
-      }
-      this.p("ET");
+    /* Gambar ditempatkan lewat matriks: sudut kiri-bawah di (x,y), ukuran w x h. */
+    K.prototype.gambar = function(nama, x, y, w, h){
+      this.p("q");
+      this.p(nn(w)+" 0 0 "+nn(h)+" "+nn(x)+" "+nn(y)+" cm");
+      this.p("/"+nama+" Do");
+      this.p("Q");
     };
+
+    /* ---- logo sebagai XObject ----
+       Byte JPEG tidak boleh masuk mentah-mentah: /Length memakai panjang string
+       JavaScript, jadi begitu ada byte di atas 126 panjang byte != panjang string
+       dan PDF-nya rusak (lihat catatan "murni ASCII"). Karena itu isinya disandi
+       heksa dan dibaca kembali oleh /ASCIIHexDecode sebelum /DCTDecode.
+       Dekode base64 ditulis sendiri karena cscript (JScript) tidak punya atob(). */
+    var B64A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    var HEXA = "0123456789ABCDEF";
+    var petaB64 = null, heksaLogo = null;
+    function b64keHeksa(s){
+      if(!petaB64){ petaB64 = {}; for(var j=0;j<64;j++) petaB64[B64A.charAt(j)] = j; }
+      var out = [], acc = 0, bits = 0, i, v, b;
+      for(i=0;i<s.length;i++){
+        v = petaB64[s.charAt(i)];
+        if(v == null) continue;                 /* "=" dan spasi dilewati */
+        acc = (acc << 6) | v; bits += 6;
+        if(bits >= 8){
+          bits -= 8;
+          b = (acc >> bits) & 255;
+          out.push(HEXA.charAt(b >> 4) + HEXA.charAt(b & 15));
+        }
+      }
+      return out.join("");
+    }
+    function logoHeksa(){
+      if(heksaLogo === null) heksaLogo = b64keHeksa(LOGO_B64) + ">";   /* ">" = penutup ASCIIHex */
+      return heksaLogo;
+    }
 
     function pad10(n){ var s = String(n); while(s.length < 10) s = "0" + s; return s; }
 
     function rakit(isi){
+      var img = logoHeksa();
       var objs = [null,
         "<< /Type /Catalog /Pages 2 0 R >>",
         "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
         "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + nn(PW) + " " + nn(PH) +
-          "] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>",
+          "] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << /Im1 7 0 R >> >>" +
+          " /Contents 4 0 R >>",
         "<< /Length " + isi.length + " >>\nstream\n" + isi + "\nendstream",
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+        "<< /Type /XObject /Subtype /Image /Width " + LOGO_W + " /Height " + LOGO_H +
+          " /ColorSpace /DeviceRGB /BitsPerComponent 8" +
+          " /Filter [/ASCIIHexDecode /DCTDecode] /Length " + img.length + " >>\nstream\n" +
+          img + "\nendstream"
       ];
       var pdf = "%PDF-1.4\n", off = [], i;
       for(i=1;i<objs.length;i++){
@@ -612,85 +674,159 @@
       return pdf;
     }
 
+    /* ================= TATA LETAK =================
+       Meniru lembar "PRINT MUATAN" pada MASTER RINCIAN MUATAN.xlsx.
+
+       Semua jarak "t" dihitung dari tepi atas daerah cetak, sama seperti baris
+       Excel, memakai tinggi baris asli dari berkasnya:
+         b1 15 | b2 21 | b3-b7 15 | b8 16 | b9 17 | b10 17 (kepala tabel 1)
+         b11-b20 -> 161 pt | b21 16 (JUMLAH) | b22 16 (sela)
+         b23 17 (kepala tabel 2) | b24-b33 -> 161 pt | b34 17 (JUMLAH)
+         b36 PENERIMA/TOTAL ROLL | b37 NO TRUK/TONASE
+         b40 kota+tanggal | b41 Penerima,/Hormat Kami, | b48 garis tanda tangan
+
+       Lebar kolom Excel: A 10,33 karakter dan B..H 9,16 karakter, yang pada
+       Calibri 11 berarti 57,75 pt dan 51,75 pt. Total tabel tepat 420 pt,
+       menempel di margin kiri — persis seperti yang dicetak Excel. */
     function buat(d){
       var k = new K();
-      function Y(top){ return PH - top; }
-      var BIRU = [0.09, 0.32, 0.61], EMAS = [0.75, 0.54, 0.12], HITAM = [0,0,0];
+      var ML = 50.4, MT = 54, MB = 54;              /* margin Excel: 0,7 dan 0,75 inci */
+      var cNo = 57.75, cD = 51.75, TW = cNo + 7*cD, TR = ML + TW;
+      function Y(t){ return PH - MT - t; }
 
-      var lx = MG + 31, ly = Y(63), R = 30;
-      k.gWarna(EMAS); k.tebal(1.6); k.lingkaran(lx, ly, R);
-      k.gWarna(BIRU); k.tebal(0.8); k.lingkaran(lx, ly, R - 3.2);
-      k.iWarna(BIRU);
-      var ring = String(d.kop.ring || "WAVI ADHIKARI CENDANA").replace(/^\s+|\s+$/g, "") || "WAVI";
-      var sp = ring.indexOf(" ");
-      k.teksLingkar(sp > 0 ? ring.slice(0, sp) : ring, lx, ly, R - 8.5, 5.8, true, true, 1.2);
-      if(sp > 0) k.teksLingkar(ring.slice(sp + 1), lx, ly, R - 8.5, 4.6, true, false, 0.8);
-      k.gWarna(EMAS); k.tebal(1.2);
-      k.garis(lx - 16, ly - 7.5, lx + 16, ly - 7.5);
-      k.iWarna(BIRU);
-      k.teks("WAC", lx, ly - 3, 17, true, "c");
+      var HITAM = [0,0,0], BIRU_KEPALA = [0, 0.6902, 0.9412];   /* #00B0F0 */
+      var TIPIS = 0.75, SEDANG = 1.5;               /* garis "thin" dan "medium" Excel */
+
+      /* Excel memakai Calibri; PDF hanya punya Helvetica bawaan, yang lebih lebar.
+         Faktor ini menyamakan lebar cetaknya, diukur dari teks kop di berkas asli
+         (Calibri Bold 30pt "WAVI RAFIA GRUP" = 231,2 pt; Helvetica-Bold = 273,3 pt). */
+      function hv(pt){ return pt * 0.846; }
+
+      /* ---------- logo ----------
+         Bingkai gambar di Excel: 1823562 x 1447798 EMU = 143,6 x 114,2 pt,
+         menempel di sudut kiri-atas daerah cetak. */
+      var logoW = 143.6, logoH = logoW * LOGO_H / LOGO_W;
+      k.gambar("Im1", ML, Y(logoH), logoW, logoH);
+
+      /* ---------- kop ----------
+         Excel memusatkan teks kop pada kolom C..H, bukan pada seluruh lebar. */
+      var kolC = ML + cNo + cD, cxKop = kolC + (TR - kolC) / 2;
+
+      /* Di Excel baris alamat sebenarnya menyenggol kotak logo sekitar 2 pt.
+         Di sini teks dibatasi supaya berhenti tepat sebelum logo. */
+      var lebarAman = 2 * (cxKop - (ML + logoW + 3));
+
+      /* Ukuran huruf: pakai ukuran Excel, tetapi jangan pernah lebih lebar
+         daripada yang dihasilkan Calibri di sana — itu pula yang menjaga teks
+         tetap rapi kalau pengguna mengubah isi kop. */
+      function kopBaris(s, t, h, nominal, lebarExcel, bold){
+        var w1 = lebar(s, 1, bold);
+        var maxW = Math.min(lebarExcel, lebarAman);
+        var sz = w1 ? Math.min(nominal, maxW / w1) : nominal;
+        k.teks(s, cxKop, Y(t + h/2 + sz*0.35), sz, bold, "c");
+      }
       k.iWarna(HITAM);
+      kopBaris("DAFTAR TIMBANGAN", 15, 21, 16, 143.2, true);
+      kopBaris(d.kop.nama,         36, 30, 30, 231.2, true);
+      kopBaris(d.kop.al1,          66, 15, 10, 246.9, false);
+      kopBaris(d.kop.al2,          81, 15, 10, 246.9, false);
+      kopBaris(d.kop.al3,          96, 15, 11, 246.9, true);
 
-      var cx = PW / 2;
-      k.teks("DAFTAR TIMBANGAN", cx, Y(45), 10, true, "c", 2.4);
-      k.teks(d.kop.nama, cx, Y(72), 25, true, "c", 0.4);
-      k.teks(d.kop.al1, cx, Y(86), 8.2, false, "c");
-      k.teks(d.kop.al2, cx, Y(97), 8.2, false, "c");
+      /* garis ganda di bawah kop (Excel: border "double" pada baris 8) */
+      k.gWarna(HITAM); k.tebal(TIPIS);
+      k.garis(ML, Y(125.5), TR, Y(125.5));
+      k.garis(ML, Y(128.5), TR, Y(128.5));
 
-      k.gWarna(BIRU); k.tebal(2.2);
-      k.garis(MG, Y(105), MG + CW, Y(105));
+      /* ---------- dua blok tabel ----------
+         Garis tegak semuanya "medium", garis mendatar antar baris "thin". */
+      var hKepala = 17, hBaris = 16.1;
+      var szK = hv(12), szD = hv(11);
+      function tabel(t, mulai, hJumlah){
+        var xs = [], i, r, c, v, j;
+        for(i=0;i<=7;i++) xs.push(i === 0 ? ML : ML + cNo + cD*(i-1));
+        xs.push(TR);
+        var yData = t + hKepala, yJumlah = yData + 10*hBaris, yBawah = yJumlah + hJumlah;
 
-      var cNo = CW * 0.09, cD = (CW - cNo) / 7, rowH = 17.4;
-      function tabel(top, mulai){
-        var xs = [MG, MG + cNo], i, r, c;
-        for(i=1;i<=7;i++) xs.push(MG + cNo + cD * i);
-        k.gWarna(BIRU); k.tebal(0.7);
-        for(i=0;i<xs.length;i++) k.garis(xs[i], Y(top), xs[i], Y(top + 12*rowH));
-        for(r=0;r<=12;r++) k.garis(MG, Y(top + r*rowH), MG + CW, Y(top + r*rowH));
-        function tx(col){ return col === 0 ? MG + cNo/2 : MG + cNo + cD*(col-1) + cD/2; }
-        function by(r, size){ return Y(top + r*rowH + rowH/2 + size*0.35); }
+        k.iWarna(BIRU_KEPALA);
+        k.kotak(ML, Y(yData), TW, hKepala);
+
+        k.gWarna(HITAM);
+        k.tebal(TIPIS);
+        for(r=1;r<10;r++) k.garis(ML, Y(yData + r*hBaris), TR, Y(yData + r*hBaris));
+        k.tebal(SEDANG);
+        for(i=0;i<xs.length;i++) k.garis(xs[i], Y(t), xs[i], Y(yBawah));
+        k.garis(ML, Y(t),       TR, Y(t));
+        k.garis(ML, Y(yData),   TR, Y(yData));
+        k.garis(ML, Y(yJumlah), TR, Y(yJumlah));
+        k.garis(ML, Y(yBawah),  TR, Y(yBawah));
+
+        function tx(col){ return col === 0 ? ML + cNo/2 : ML + cNo + cD*(col-1) + cD/2; }
+        function by(top, h, sz){ return Y(top + h/2 + sz*0.35); }
+
         k.iWarna(HITAM);
-        k.teks("NO", tx(0), by(0, 9.2), 9.2, true, "c");
-        for(c=0;c<7;c++) k.teks(String((mulai+c+1)*10), tx(c+1), by(0, 9.2), 9.2, true, "c");
+        k.teks("NO", tx(0), by(t, hKepala, szK), szK, true, "c");
+        for(c=0;c<7;c++) k.teks(String((mulai+c+1)*10), tx(c+1), by(t, hKepala, szK), szK, true, "c");
         for(r=0;r<10;r++){
-          k.teks(String(r+1), tx(0), by(r+1, 8.4), 8.4, false, "c");
+          k.teks(String(r+1), tx(0), by(yData + r*hBaris, hBaris, szK), szK, true, "c");
           for(c=0;c<7;c++){
-            var t = d.nilaiTeks[(mulai+c)*10 + r];
-            if(t) k.teks(t, tx(c+1), by(r+1, 8.4), 8.4, false, "c");
+            v = d.nilaiTeks[(mulai+c)*10 + r];
+            if(v) k.teks(v, tx(c+1), by(yData + r*hBaris, hBaris, szD), szD, false, "c");
           }
         }
-        k.teks("JUMLAH", tx(0), by(11, 7.6), 7.6, true, "c");
+        k.teks("JUMLAH", tx(0), by(yJumlah, hJumlah, szD), szD, true, "c");
         for(c=0;c<7;c++){
-          var j = d.jumlahKolom[mulai+c];
-          if(j) k.teks(j, tx(c+1), by(11, 8.4), 8.4, true, "c");
+          j = d.jumlahKolom[mulai+c];
+          if(j) k.teks(j, tx(c+1), by(yJumlah, hJumlah, szD), szD, true, "c");
         }
       }
-      var topA = 113, topB = topA + 12*rowH + 9;
-      tabel(topA, 0);
-      tabel(topB, 7);
+      tabel(144, 0, 16);
+      tabel(354, 7, 17);
 
-      var fy = topB + 12*rowH + 22, kiri = MG, kanan = MG + CW*0.52;
-      function baris(x, y, label, nilai, tb){
-        k.teks(label, x, y, 9.2, true, "l", 0.4);
-        k.teks(":", x + 92, y, 9.2, false, "l");
-        k.teks(nilai, x + 100, y, 9.2, !!tb, "l");
-      }
-      baris(kiri,  Y(fy),      "TOTAL ROLL",   d.roll + " roll", true);
-      baris(kiri,  Y(fy + 15), "TOTAL TONASE", d.tonaseTeks + " kg", true);
-      baris(kanan, Y(fy),      "PENERIMA",     d.penerima || "", false);
-      baris(kanan, Y(fy + 15), "NO TRUK",      d.noTruk || "", true);
+      /* ---------- blok bawah ----------
+         Excel menaruh PENERIMA dan NO TRUK di kiri, TOTAL ROLL dan TONASE di kanan. */
+      var fs = hv(11);
+      function fb(t, h){ return Y(t + h/2 + fs*0.35); }
+      /* Label "PENERIMA =" dan "NO TRUK     =" sedikit lebih lebar dari kolom A
+         (57,75 pt), jadi nilainya dimulai 66 pt supaya tidak menempel. */
+      var xB = ML + 66;
+      var xF2 = ML + cNo + 5*cD;               /* tepi kanan kolom F: label rata kanan */
+      var xG = xF2, xGc = xF2 + cD/2, xH = xF2 + cD;
 
-      var sy = fy + 46;
-      k.teks(d.kop.kota + ", " + d.tanggalPanjang, MG + CW, Y(sy), 9.5, false, "r");
-      k.teks("Penerima,", kiri, Y(sy + 15), 9.5, false, "l");
-      k.teks("Hormat Kami,", MG + CW, Y(sy + 15), 9.5, false, "r");
-      k.teks("(...................................)", kiri, Y(sy + 72), 9.5, false, "l");
-      k.teks("(...................................)", MG + CW, Y(sy + 72), 9.5, false, "r");
+      k.iWarna(HITAM);
+      k.teks("PENERIMA =",  ML, fb(564,15), fs, true, "l");
+      k.teks(d.penerima || "", xB, fb(564,15), fs, false, "l");
+      k.teks("NO TRUK     =", ML, fb(579,15), fs, true, "l");
+      k.teks(d.noTruk || "",  xB, fb(579,15), fs, true, "l");
+
+      k.teks("TOTAL ROLL  =", xF2, fb(564,15), fs, true, "r");
+      k.teks(String(d.roll),  xG + 3, fb(564,15), fs, true, "l");
+      k.teks("TONASE           =", xF2, fb(579,15), fs, true, "r");
+      k.teks(d.tonaseTeks, xGc, fb(579,15), fs, true, "c");
+      k.teks("KG", xH + 3, fb(579,15), fs, true, "l");
+
+      /* ---------- tanda tangan ---------- */
+      var ss = hv(12);
+      var cxAB = (ML + ML + cNo + cD) / 2;     /* pusat A..B */
+      var cxFH = (xF2 - cD + TR) / 2;          /* pusat F..H */
+      function sb(t, h){ return Y(t + h/2 + ss*0.35); }
+      k.teks(d.kop.kota + ", " + d.tanggalPanjang, cxFH, sb(624,16), ss, true, "c");
+      k.teks("Penerima,",    cxAB, sb(640,16), ss, true, "c");
+      k.teks("Hormat Kami,", cxFH, sb(640,16), ss, true, "c");
+
+      /* Baris 48 Excel jatuh di 746 pt, sedikit melewati tinggi cetak A4 (733,9 pt),
+         jadi digeser naik seperlunya supaya tetap satu halaman. */
+      var tTtd = Math.min(746, PH - MT - MB - 15);
+      k.teks("(...................................)", cxAB, sb(tTtd,15), ss, false, "c");
+      k.teks("(...................................)", cxFH, sb(tTtd,15), ss, false, "c");
 
       return rakit(k.o.join("\n"));
     }
-    return {buat: buat};
+    /* lebar() ikut diekspor supaya uji-pdf.js bisa menghitung ulang kotak batas
+       tiap teks dan memeriksa tidak ada yang keluar kertas atau menabrak logo. */
+    return {buat: buat, lebar: lebar};
   })();
+
+  /* ==UJI-PDF-SELESAI== */
 
   function unduhBlob(nama, blob){
     try{
@@ -796,7 +932,7 @@
   var elSavebar = document.getElementById("savebar");
   var elSaveTxt = document.getElementById("save-txt");
 
-  var kop = Object.assign({}, KOP_DEFAULT, readLS(LS_KOP, {}));
+  var kop = migrasiKop(Object.assign({}, KOP_DEFAULT, readLS(LS_KOP, {})));
   var currentId = null;
   var inputs = new Array(SLOTS);
   var sumCells = new Array(COLS);
@@ -1107,7 +1243,7 @@
   }
 
   /* ---------- kop ---------- */
-  var kopEls = {nama:"k-nama", al1:"k-al1", al2:"k-al2", kota:"k-kota", ring:"k-ring"};
+  var kopEls = {nama:"k-nama", al1:"k-al1", al2:"k-al2", al3:"k-al3", kota:"k-kota"};
   Object.keys(kopEls).forEach(function(key){
     var el = document.getElementById(kopEls[key]);
     el.value = kop[key];
@@ -1115,7 +1251,7 @@
   });
   function paintBrand(){
     document.getElementById("brand-name").textContent = kop.nama;
-    document.getElementById("brand-mark").innerHTML = logoSVG(kop.ring, "#9CC2EA", "#E8B547", "#9CC2EA");
+    document.getElementById("brand-mark").innerHTML = logoIMG("");
   }
 
   /* ---------- histori ---------- */
@@ -1255,7 +1391,7 @@
         });
         if(!writeLS(LS_HIST, cur)){ toast("Penyimpanan penuh — hapus muat lama dulu"); e.target.value = ""; return; }
         if(d.kop){
-          kop = Object.assign({}, KOP_DEFAULT, d.kop);
+          kop = migrasiKop(Object.assign({}, KOP_DEFAULT, d.kop));
           writeLS(LS_KOP, kop);
           Object.keys(kopEls).forEach(function(k){ document.getElementById(kopEls[k]).value = kop[k]; });
           paintBrand();
@@ -1291,7 +1427,10 @@
       }
       sums += '<td>' + (ada ? fmtSen(s) : "") + '</td>';
     }
-    return '<table class="ps-table"><colgroup><col class="ps-c1"></colgroup>' +
+    /* lebar kolom dikunci sesuai Excel: A 57,75 pt, sisanya 51,75 pt */
+    var cols = '<col style="width:57.75pt">';
+    for(var ci=0;ci<7;ci++) cols += '<col style="width:51.75pt">';
+    return '<table class="ps-table"><colgroup>' + cols + '</colgroup>' +
       '<thead><tr><th>NO</th>' + heads + '</tr></thead><tbody>' + body +
       '<tr class="ps-sum"><td>JUMLAH</td>' + sums + '</tr></tbody></table>';
   }
@@ -1299,27 +1438,34 @@
   function sheet(rec){
     var w = rec.w || [], totalSen = 0, roll = 0;
     for(var i=0;i<SLOTS;i++){ if(w[i] != null){ totalSen += sen(w[i]); roll++; } }
-    return '<div class="ps"><div class="ps-head">' +
-      '<div class="ps-mark">' + logoSVG(kop.ring, "#17529B", "#C08A1E", "#17529B") + '</div>' +
-      '<div class="ps-titles"><div class="ps-t1">Daftar Timbangan</div>' +
-        '<div class="ps-t2">' + esc(kop.nama) + '</div>' +
-        '<div class="ps-t3">' + esc(kop.al1) + '</div>' +
-        '<div class="ps-t3">' + esc(kop.al2) + '</div></div>' +
-      '<div class="ps-mark" style="visibility:hidden"></div></div>' +
-      '<div class="ps-rule"></div>' + psTable(w,0) + psTable(w,7) +
-      '<div class="ps-foot"><div class="ps-foot-col">' +
-        '<div class="ps-line"><span class="ps-lab">Total Roll</span><span>:</span><span class="ps-val">' + roll + ' roll</span></div>' +
-        '<div class="ps-line"><span class="ps-lab">Total Tonase</span><span>:</span><span class="ps-val">' + fmtSen(totalSen) + ' kg</span></div>' +
-      '</div><div class="ps-foot-col">' +
-        '<div class="ps-line"><span class="ps-lab">Penerima</span><span>:</span><span class="ps-val txt">' + esc(rec.penerima) + '</span></div>' +
-        '<div class="ps-line"><span class="ps-lab">No Truk</span><span>:</span><span class="ps-val">' + esc(rec.noTruk) + '</span></div>' +
-      '</div></div>' +
-      '<div class="ps-sign"><div class="ps-sign-col">' +
-        '<div>&nbsp;</div><div>Penerima,</div><div class="ps-gap"></div><div>(...................................)</div>' +
-      '</div><div class="ps-sign-col r">' +
-        '<div>' + esc(kop.kota) + ', ' + esc(tglPanjang(rec.tanggal)) + '</div><div>Hormat Kami,</div>' +
-        '<div class="ps-gap"></div><div>(...................................)</div>' +
-      '</div></div></div>';
+    var ttd = "(...................................)";
+    return '<div class="ps">' +
+      logoIMG("ps-logo") +
+      '<div class="ps-t ps-t1">DAFTAR TIMBANGAN</div>' +
+      '<div class="ps-t ps-t2">' + esc(kop.nama) + '</div>' +
+      '<div class="ps-t ps-t3">' + esc(kop.al1) + '</div>' +
+      '<div class="ps-t ps-t4">' + esc(kop.al2) + '</div>' +
+      '<div class="ps-t ps-t5">' + esc(kop.al3) + '</div>' +
+      '<div class="ps-rule"></div>' +
+      '<div class="ps-tab ps-tabA">' + psTable(w,0) + '</div>' +
+      '<div class="ps-tab ps-tabB">' + psTable(w,7) + '</div>' +
+
+      '<div class="ps-f ps-r36 ps-kiri">PENERIMA =</div>' +
+      '<div class="ps-f ps-r36 ps-isi nilai">' + esc(rec.penerima) + '</div>' +
+      '<div class="ps-f ps-r37 ps-kiri">NO TRUK     =</div>' +
+      '<div class="ps-f ps-r37 ps-isi">' + esc(rec.noTruk) + '</div>' +
+      '<div class="ps-f ps-r36 ps-labkanan">TOTAL ROLL  =</div>' +
+      '<div class="ps-f ps-r36 ps-nilG">' + roll + '</div>' +
+      '<div class="ps-f ps-r37 ps-labkanan">TONASE           =</div>' +
+      '<div class="ps-f ps-r37 ps-nilGc">' + fmtSen(totalSen) + '</div>' +
+      '<div class="ps-f ps-r37 ps-nilH">KG</div>' +
+
+      '<div class="ps-s ps-sFH" style="top:624pt">' + esc(kop.kota) + ', ' + esc(tglPanjang(rec.tanggal)) + '</div>' +
+      '<div class="ps-s ps-sAB" style="top:640pt">Penerima,</div>' +
+      '<div class="ps-s ps-sFH" style="top:640pt">Hormat Kami,</div>' +
+      '<div class="ps-s ps-sAB ps-ttd">' + ttd + '</div>' +
+      '<div class="ps-s ps-sFH ps-ttd">' + ttd + '</div>' +
+      '</div>';
   }
 
   function namaBerkas(rec){
