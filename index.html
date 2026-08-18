@@ -82,9 +82,29 @@
     line-height:1.15;color:#fff;white-space:nowrap}
   .stat-val .u{font-size:11px;font-weight:500;color:#93AECC;margin-left:3px;letter-spacing:.06em}
   .stat.tonase .stat-val{color:var(--gold-2)}
+  .stat.rupiah .stat-val{color:#7FD1A6;font-size:19px}
+  .stat.rupiah .rp-awalan{margin:0 4px 0 0}
+  /* selama harga belum diisi, kotak rupiah sengaja diredupkan - dia memang
+     tidak wajib dan tidak boleh terasa seperti isian yang terlewat */
+  .stat.rupiah.kosong .stat-val{color:#6B84A0}
+  .stat.pos{flex:0 0 auto}
   .stat.pos .stat-val{font-size:15px;color:#CFE0F2;padding-top:4px}
   .stat.flash{background:#16324F}
   @media (prefers-reduced-motion: no-preference){ .stat{transition:background .28s ease-out} }
+  /* Di layar HP empat kotak tidak muat sekaligus dan angka rupiah
+     terpotong. Ukurannya dikecilkan supaya seluruh angka tetap terbaca
+     utuh - angka yang terpotong lebih berbahaya daripada angka kecil. */
+  @media (max-width: 620px){
+    .stat{padding:6px 8px 7px}
+    .stat-lab{font-size:8.5px;letter-spacing:.12em}
+    .stat-val{font-size:17px}
+    .stat.rupiah .stat-val{font-size:15px}
+    .stat.pos .stat-val{font-size:13px}
+  }
+  @media (max-width: 400px){
+    .stat-val{font-size:15px}
+    .stat.rupiah .stat-val{font-size:13.5px}
+  }
 
   /* ---------- layout ---------- */
   main{max-width:900px;margin:0 auto;padding:12px 12px 108px}
@@ -376,6 +396,10 @@
       <div class="stat tonase" id="s-ton">
         <div class="stat-lab">Total Tonase</div>
         <div class="stat-val"><span id="ro-ton">0,00</span><span class="u">kg</span></div>
+      </div>
+      <div class="stat rupiah" id="s-rp">
+        <div class="stat-lab">Rupiah</div>
+        <div class="stat-val"><span class="u rp-awalan">Rp</span><span id="ro-rp">–</span></div>
       </div>
       <div class="stat pos">
         <div class="stat-lab">Posisi</div>
@@ -913,16 +937,18 @@
       k.iWarna([0,0,0]);
       k.teks(d.roll + " roll", ML + x[0] + kol[0]/2, alasT(Y, yB, 9), 9, false, "c");
       k.teks(d.barang || "", ML + x[1] + 6, alasT(Y, yB, 9), 9, false, "l");
-      k.teks(d.kgTeks + " kg", ML + x[2] + kol[2] - 6, alasT(Y, yB, 9), 9, false, "r");
+      /* di blanko aslinya nilai Keterangan ada di TENGAH kolomnya */
+      k.teks(d.kgTeks + " kg", ML + x[2] + kol[2]/2, alasT(Y, yB, 9), 9, false, "c");
 
+      /* Dua blok tanda tangan, label dan isian di bawahnya sepusat -
+         angka pusatnya sama persis dengan jalur Cetak. */
+      var ttdW = 170, cxKiri = ML + 0 + ttdW/2, cxKanan = ML + 271 + ttdW/2;
       k.iWarna(d.DOK.TINTA);
-      k.teks("Tanda Terima,", ML + 22, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
-      k.teks("Hormat Kami,", ML + 330, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
-      /* Kiri: kurung untuk nama penerima. Kanan: nama perusahaan, persis
-         seperti tercetak di blanko di bawah tanda tangan "Hormat Kami". */
-      k.teks("(  .................................  )", ML + 6,
-             alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
-      k.teks(d.kop.nama, ML + 300 + 85, alasT(Y, tAkhir + 45, 9.5), 9.5, true, "c");
+      k.teks("Tanda Terima,", cxKiri,  alasT(Y, tAkhir + 12, 8.5), 8.5, false, "c");
+      k.teks("Hormat Kami,",  cxKanan, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "c");
+      k.teks("(  .................................  )", cxKiri,
+             alasT(Y, tAkhir + 46, 8.5), 8.5, false, "c");
+      k.teks(d.kop.nama, cxKanan, alasT(Y, tAkhir + 45, 9.5), 9.5, true, "c");
     }
 
     /* Satu lembar: Nota di paruh ATAS, Surat Jalan di paruh BAWAH, keduanya
@@ -1278,6 +1304,9 @@
   var elHarga  = document.getElementById("i-harga");
   var elKend   = document.getElementById("i-kendaraan");
   var elSJ     = document.getElementById("i-nosj");
+  var elRp     = document.getElementById("ro-rp");
+  var elSRp    = document.getElementById("s-rp");
+  var lastRp   = null;
   var elRoll = document.getElementById("ro-roll");
   var elTon  = document.getElementById("ro-ton");
   var elPos  = document.getElementById("ro-pos");
@@ -1387,6 +1416,21 @@
 
     elRoll.textContent = String(count);
     elTon.textContent = fmtSen(totalSen);
+
+    /* Rupiah hidup. Dihitung dari total sen (bilangan bulat) dikali harga,
+       lalu dibulatkan ke rupiah penuh - cara yang sama persis dengan yang
+       dipakai Nota, jadi angka di layar dan di nota tidak akan berbeda. */
+    var hargaKini = parseKetatRp(elHarga.value);
+    var rpKini = (hargaKini == null) ? null : Math.round(totalSen * hargaKini / 100);
+    elRp.textContent = (rpKini == null) ? "–" : fmtRp(rpKini);
+    elSRp.classList.toggle("kosong", rpKini == null);
+    if(rpKini !== lastRp){
+      lastRp = rpKini;
+      if(rpKini != null){
+        elSRp.classList.add("flash");
+        setTimeout(function(){ elSRp.classList.remove("flash"); }, 260);
+      }
+    }
     if(totalSen !== lastTon){
       lastTon = totalSen;
       var st = document.getElementById("s-ton");
@@ -1507,6 +1551,10 @@
   }
   [elTgl, elTruk, elPen, elBarang, elHarga, elKend, elSJ]
     .forEach(function(el){ el.addEventListener("input", saveDraft); });
+
+  /* Harga boleh diisi kapan saja - termasuk setelah setengah muat sudah
+     ditimbang. Begitu diketik, seluruh muat langsung dihitung ulang. */
+  elHarga.addEventListener("input", function(){ recalc(); });
 
   document.addEventListener("visibilitychange", function(){
     if(document.visibilityState === "hidden") tulisDraft();
@@ -2021,14 +2069,19 @@
     var yB = tBar + 4;
     s += eTeks(m.roll + " roll", x[0], yB, 9, {tengah:true, w:SJ_KOL[0]});
     s += eTeks(rec.barang || "", x[1] + 6, yB, 9);
-    s += eTeks(m.kgTeks + " kg", x[2], yB, 9, {kanan:true, w:SJ_KOL[2] - 6});
+    /* di blanko aslinya nilai Keterangan ada di TENGAH kolomnya */
+    s += eTeks(m.kgTeks + " kg", x[2], yB, 9, {tengah:true, w:SJ_KOL[2]});
 
-    s += eTeks("Tanda Terima,", 22, tAkhir + 12, 8.5, {biru:true});
-    s += eTeks("Hormat Kami,", 330, tAkhir + 12, 8.5, {biru:true});
-    /* Kiri: kurung untuk nama penerima. Kanan: nama perusahaan, persis
-       seperti tercetak di blanko di bawah tanda tangan "Hormat Kami". */
-    s += eTeks("(  .................................  )", 6, tAkhir + 46, 8.5, {biru:true});
-    s += eTeks(kop.nama, 300, tAkhir + 45, 9.5, {biru:true, tebal:true, tengah:true, w:170});
+    /* Dua blok tanda tangan. Label dan isian di bawahnya memakai kotak yang
+       SAMA lalu sama-sama ditengahkan, sehingga selalu sejajar berapa pun
+       lebar hurufnya. Kiri: kurung untuk nama penerima. Kanan: nama
+       perusahaan, persis seperti tercetak di blanko. */
+    var kiriX = 0, kananX = 271, ttdW = 170;
+    s += eTeks("Tanda Terima,", kiriX,  tAkhir + 12, 8.5, {biru:true, tengah:true, w:ttdW});
+    s += eTeks("Hormat Kami,",  kananX, tAkhir + 12, 8.5, {biru:true, tengah:true, w:ttdW});
+    s += eTeks("(  .................................  )", kiriX, tAkhir + 46, 8.5,
+               {biru:true, tengah:true, w:ttdW});
+    s += eTeks(kop.nama, kananX, tAkhir + 45, 9.5, {biru:true, tebal:true, tengah:true, w:ttdW});
 
     return '<div class="dk" style="height:' + (tAkhir + 62) + 'pt">' + s + '</div>';
   }
