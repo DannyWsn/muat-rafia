@@ -258,7 +258,9 @@
     font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ps-logo{position:absolute;left:0;top:15.8pt;width:120pt;height:95.4pt;object-fit:contain}
-  .ps-t{position:absolute;left:0;width:505.28pt;text-align:center;white-space:nowrap}
+  /* Dipusatkan pada ruang di kanan logo (logo 120pt), bukan pada seluruh lebar
+     lembar - alasannya ada di penggambar kop PDF. */
+  .ps-t{position:absolute;left:120pt;width:385.28pt;text-align:center;white-space:nowrap}
   .ps-t1{top:15pt;line-height:21pt;font-size:16pt;font-weight:700}
   .ps-t2{top:36pt;line-height:30pt;font-size:30pt;font-weight:700}
   .ps-t3{top:66pt;line-height:15pt;font-size:10pt}
@@ -721,12 +723,15 @@
       k.gambar("Im1", ML, Y(logoT + logoH), logoW, logoH);
 
       /* ---------- kop ----------
-         Excel memusatkan teks kop pada kolom C..H saja, sehingga terlihat lari
-         ke kanan. Di sini dipusatkan pada lebar lembar. */
-      var cxKop = ML + TW / 2;
+         Logo memakan 120pt di sisi kiri. Kalau teks dipusatkan pada seluruh
+         lebar lembar, hasilnya justru TIMPANG: teks mepet ke logo (sisa 10pt)
+         sementara di kanan menganga 129pt. Karena itu teks dipusatkan pada
+         RUANG DI SEBELAH KANAN LOGO, sehingga jarak kiri dan kanannya sama
+         besar dan kop terbaca seimbang. */
+      var JARAK_LOGO = 12;                      /* jarak terkecil teks ke logo */
+      var cxKop = ML + (logoW + TW) / 2;
 
-      /* batas supaya teks kop berhenti sebelum logo */
-      var lebarAman = 2 * (cxKop - (ML + logoW + 8));
+      var lebarAman = (TW - logoW) - 2 * JARAK_LOGO;
 
       /* Ukuran huruf: pakai ukuran Excel, tetapi jangan pernah lebih lebar
          daripada yang dihasilkan Calibri di sana — itu pula yang menjaga teks
