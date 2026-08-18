@@ -808,22 +808,23 @@
       k.iWarna([0,0,0]);
       k.teks(d.roll + " roll", ML + x[0] + kol[0]/2, alasT(Y, yB, 9), 9, false, "c");
       k.teks((d.barang || "") + "      " + d.kgTeks + " kg", ML + x[1] + 6, alasT(Y, yB, 9), 9, false, "l");
-      if(d.hargaTeks) k.teks(d.hargaTeks, ML + x[2] + kol[2] - 6, alasT(Y, yB, 9), 9, false, "r");
-      if(d.rpTeks)    k.teks(d.rpTeks,    ML + x[3] + kol[3] - 6, alasT(Y, yB, 9), 9, false, "r");
+      /* di blanko aslinya kedua angka ini di TENGAH kolomnya, bukan rata kanan */
+      if(d.hargaTeks) k.teks(d.hargaTeks, ML + x[2] + kol[2]/2, alasT(Y, yB, 9), 9, false, "c");
+      if(d.rpTeks)    k.teks(d.rpTeks,    ML + x[3] + kol[3]/2, alasT(Y, yB, 9), 9, false, "c");
       for(i=0;i<d.transfer.length;i++){
         k.teks(d.transfer[i], ML + x[1] + 6, alasT(Y, tBar + (i+2)*hBar + 4, 8.5), 8.5, false, "l");
       }
 
-      k.gWarna(d.DOK.TINTA); k.tebal(0.7);
-      bingkai(k, ML, Y(tKaki + hKaki), W, hKaki);
-      k.garis(ML + x[2], Y(tKaki), ML + x[2], Y(tKaki + hKaki));
-      k.garis(ML + x[3], Y(tKaki), ML + x[3], Y(tKaki + hKaki));
+      /* Kaki DI LUAR kotak tabel: yang berkotak hanya angka jumlahnya,
+         sedangkan "Jumlah Rp." menjadi label di sebelah kirinya. */
       k.iWarna(d.DOK.TINTA);
-      k.teks("Tanda Terima,", ML + 14, alasT(Y, tKaki + 9, 8.5), 8.5, false, "l");
-      k.teks("Hormat Kami,", ML + 178, alasT(Y, tKaki + 9, 8.5), 8.5, false, "l");
-      k.teks("Jumlah Rp.", ML + x[2] + kol[2]/2, alasT(Y, tKaki + 9, 8.5), 8.5, false, "c");
+      k.teks("Tanda Terima,", ML + 14, alasT(Y, tKaki + 8, 8.5), 8.5, false, "l");
+      k.teks("Hormat Kami,", ML + 178, alasT(Y, tKaki + 8, 8.5), 8.5, false, "l");
+      k.teks("Jumlah Rp.", ML + x[2] + kol[2] - 8, alasT(Y, tKaki + 9, 8.5), 8.5, false, "r");
+      k.gWarna(d.DOK.TINTA); k.tebal(0.7);
+      bingkai(k, ML + x[3], Y(tKaki + 1 + 21), kol[3], 21);
       k.iWarna([0,0,0]);
-      if(d.rpTeks) k.teks(d.rpTeks, ML + x[3] + kol[3] - 6, alasT(Y, tKaki + 8, 10), 10, true, "r");
+      if(d.rpTeks) k.teks(d.rpTeks, ML + x[3] + kol[3]/2, alasT(Y, tKaki + 7, 10), 10, true, "c");
 
       /* Tempat tanda tangan di KEDUA sisi, bercermin dengan jalur Cetak. */
       k.gWarna([0,0,0]); k.tebal(0.7);
@@ -917,9 +918,11 @@
       k.iWarna(d.DOK.TINTA);
       k.teks("Tanda Terima,", ML + 22, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
       k.teks("Hormat Kami,", ML + 330, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
-      var kurung = "(  .................................  )";
-      k.teks(kurung, ML + 6,   alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
-      k.teks(kurung, ML + 314, alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
+      /* Kiri: kurung untuk nama penerima. Kanan: nama perusahaan, persis
+         seperti tercetak di blanko di bawah tanda tangan "Hormat Kami". */
+      k.teks("(  .................................  )", ML + 6,
+             alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
+      k.teks(d.kop.nama, ML + 300 + 85, alasT(Y, tAkhir + 45, 9.5), 9.5, true, "c");
     }
 
     /* Satu lembar: Nota di paruh ATAS, Surat Jalan di paruh BAWAH, keduanya
@@ -1954,20 +1957,20 @@
     var yB = tBar + 4;
     s += eTeks(m.roll + " roll", x[0], yB, 9, {tengah:true, w:NOTA_KOL[0]});
     s += eTeks((rec.barang || "") + "      " + m.kgTeks + " kg", x[1] + 6, yB, 9);
-    s += eTeks(fmtRp(rec.harga), x[2], yB, 9, {kanan:true, w:NOTA_KOL[2] - 6});
-    s += eTeks(fmtRp(m.rp),      x[3], yB, 9, {kanan:true, w:NOTA_KOL[3] - 6});
+    /* di blanko aslinya kedua angka ini di TENGAH kolomnya, bukan rata kanan */
+    s += eTeks(fmtRp(rec.harga), x[2], yB, 9, {tengah:true, w:NOTA_KOL[2]});
+    s += eTeks(fmtRp(m.rp),      x[3], yB, 9, {tengah:true, w:NOTA_KOL[3]});
     /* rekening di kolom Nama Barang, baris ke-3 sampai ke-5 */
     for(i=0;i<trf.length;i++){
       s += eTeks(trf[i], x[1] + 6, tBar + (i+2)*hBar + 4, 8.5);
     }
-    /* kaki */
-    s += eKotak(0, tKaki, DOK.W, hKaki);
-    s += eTegak(x[2], tKaki, hKaki);
-    s += eTegak(x[3], tKaki, hKaki);
-    s += eTeks("Tanda Terima,", 14, tKaki + 9, 8.5, {biru:true});
-    s += eTeks("Hormat Kami,", 178, tKaki + 9, 8.5, {biru:true});
-    s += eTeks("Jumlah Rp.", x[2], tKaki + 9, 8.5, {biru:true, tengah:true, w:NOTA_KOL[2]});
-    s += eTeks(fmtRp(m.rp), x[3], tKaki + 8, 10, {kanan:true, tebal:true, w:NOTA_KOL[3] - 6});
+    /* Kaki berada DI LUAR kotak tabel, seperti pada blanko: yang berkotak
+       hanya angka jumlahnya, sedangkan "Jumlah Rp." jadi label di kirinya. */
+    s += eTeks("Tanda Terima,", 14, tKaki + 8, 8.5, {biru:true});
+    s += eTeks("Hormat Kami,", 178, tKaki + 8, 8.5, {biru:true});
+    s += eTeks("Jumlah Rp.", x[2], tKaki + 9, 8.5, {biru:true, kanan:true, w:NOTA_KOL[2] - 8});
+    s += eKotak(x[3], tKaki + 1, NOTA_KOL[3], 21);
+    s += eTeks(fmtRp(m.rp), x[3], tKaki + 7, 10, {tengah:true, tebal:true, w:NOTA_KOL[3]});
     /* Tempat tanda tangan di KEDUA sisi - "Tanda Terima" dan "Hormat Kami"
        sama-sama perlu dibubuhi tanda tangan. */
     s += '<div class="dk-garis" style="left:14pt;top:' + (tAkhir + 30) + 'pt;width:140pt"></div>';
@@ -2022,9 +2025,10 @@
 
     s += eTeks("Tanda Terima,", 22, tAkhir + 12, 8.5, {biru:true});
     s += eTeks("Hormat Kami,", 330, tAkhir + 12, 8.5, {biru:true});
-    var kurung = "(  .................................  )";
-    s += eTeks(kurung, 6, tAkhir + 46, 8.5, {biru:true});
-    s += eTeks(kurung, 314, tAkhir + 46, 8.5, {biru:true});
+    /* Kiri: kurung untuk nama penerima. Kanan: nama perusahaan, persis
+       seperti tercetak di blanko di bawah tanda tangan "Hormat Kami". */
+    s += eTeks("(  .................................  )", 6, tAkhir + 46, 8.5, {biru:true});
+    s += eTeks(kop.nama, 300, tAkhir + 45, 9.5, {biru:true, tebal:true, tengah:true, w:170});
 
     return '<div class="dk" style="height:' + (tAkhir + 62) + 'pt">' + s + '</div>';
   }

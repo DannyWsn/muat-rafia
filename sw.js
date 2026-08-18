@@ -1,7 +1,7 @@
 /* Penyimpan luring Kalkulator Muat Rafia.
    Aplikasi disimpan di HP saat pertama dibuka, lalu berjalan penuh tanpa internet.
    Naikkan angka VERSI setiap kali aplikasi diperbarui. */
-var VERSI = "v9";
+var VERSI = "v10";
 var CACHE = "muat-rafia-" + VERSI;
 var ASET = [
   "./",
