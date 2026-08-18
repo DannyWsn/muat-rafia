@@ -290,17 +290,22 @@
   .dk-titik{position:absolute;border-bottom:0.7pt dotted #14539e}
   .dk-kotak{position:absolute;border:0.7pt solid #14539e}
   .dk-tegak{position:absolute;border-left:0.7pt solid #14539e;width:0}
-  /* Garis gunting antara Nota dan Surat Jalan: keduanya dicetak pada satu
-     lembar lalu dipotong. Jaraknya dibuat lega supaya guntingan tidak
-     memakan tepi dokumen. */
-  .dk-potong{position:relative;width:505.28pt;height:0;margin:26pt auto;
+  /* Satu halaman = satu lembar A4 utuh, jaraknya diatur dari dalam.
+     Ukuran kertas dipatok supaya letak tegak benar-benar terkendali. */
+  .halaman{position:relative;width:595.28pt;height:841.89pt;overflow:hidden}
+  .halaman + .halaman{break-before:page;page-break-before:always}
+  .hal-timbangan{padding:54pt 45pt 0}
+
+  /* Slip Nota / Surat Jalan, masing-masing ditengahkan pada separuh kertas */
+  .dk-slip{position:absolute;left:45pt;width:505.28pt}
+
+  /* Garis gunting TEPAT di tengah kertas (420,945pt). Ditarik hampir sampai
+     tepi supaya mudah dijadikan patokan menyobek. */
+  .dk-potong{position:absolute;left:18pt;width:559.28pt;top:420.945pt;height:0;
     border-top:0.8pt dashed #14539e;text-align:center}
   .dk-potong span{position:relative;top:-5.5pt;background:#fff;padding:0 8pt;
     font-size:7pt;color:#14539e;
     font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif}
-
-  /* tiap dokumen satu halaman sendiri saat dicetak sekaligus */
-  .halaman + .halaman{break-before:page;page-break-before:always}
   .dk-logo{position:absolute;object-fit:contain}
   .dk-garisbawah{border-bottom:0.9pt solid #14539e;padding-bottom:1pt}
 
@@ -339,8 +344,11 @@
   .ps-ttd{font-weight:400;top:718.89pt}
 
   @media print{
-    /* margin sama dengan pengaturan cetak Excel: 0,7 inci kiri/kanan, 0,75 inci atas/bawah */
-    @page{size:A4 portrait;margin:0.75in 0.7in}
+    /* Margin halaman NOL, jaraknya sudah ada di dalam tiap halaman. Dua
+       untungnya sekaligus: letak tegak terkendali penuh (perlu untuk
+       membagi kertas tepat dua), dan browser tidak lagi mencetak kop
+       sendiri berisi judul halaman dan alamat berkas di tepi kertas. */
+    @page{size:A4 portrait;margin:0}
     html,body{background:#fff !important;margin:0}
     body>*:not(#print-root){display:none !important}
     #print-root{display:block !important}
@@ -731,8 +739,10 @@
     }
     /* Garis alas teks. Pada jalur Cetak "top" adalah tepi atas kotak teks
        setinggi satu ukuran huruf; alasnya kira-kira 0,80 dari atas. */
-    function pembuatY(offY){
-      return function(t){ return PH - 54 - offY - t; };
+    /* atas = jarak tepi atas dokumen dari TEPI ATAS KERTAS. Dipakai untuk
+       menaruh tiap slip tepat di tengah paruhnya masing-masing. */
+    function pembuatY(atas){
+      return function(t){ return PH - atas - t; };
     }
     function alasT(Y, t, uk){ return Y(t + uk * 0.80); }
 
@@ -755,8 +765,8 @@
       }
     }
 
-    function gambarNota(k, d, offY){
-      var ML = 45, Y = pembuatY(offY), W = d.DOK.W, x = d.notaX, kol = d.notaKol;
+    function gambarNota(k, d, atas){
+      var ML = 45, Y = pembuatY(atas), W = d.DOK.W, x = d.notaX, kol = d.notaKol;
       var tTab = 60, hKep = 19, hBar = 17, nBar = 9, hKaki = 26;
       var tBar = tTab + hKep, tKaki = tBar + nBar*hBar, tAkhir = tKaki + hKaki;
       var judul = ["Banyaknya", "Nama Barang", "Harga @", "Jumlah"];
@@ -764,11 +774,22 @@
 
       k.gambar("Im1", ML, Y(4 + 49.3), 62, 49.3);
 
-      var cxA = ML + 66, cwA = d.DOK.kananX - 12 - 66;
+      /* Ruang teks kop = antara tepi kanan logo dan tepi kiri blok kanan.
+         Ukuran huruf diturunkan dari lebar ruang itu, bukan dipatok angka,
+         supaya kop tetap terisi seimbang walau isi kop diganti. */
+      var xKiri = ML + 62 + 8, xKanan = ML + d.DOK.kananX - 8;
+      var cxA = (xKiri + xKanan) / 2, ruangKop = xKanan - xKiri;
+      function muatKop(s, uk, bold){
+        var w1 = lebar(s, 1, bold);
+        return w1 ? Math.min(uk, ruangKop * 0.96 / w1) : uk;
+      }
+      var al2gab = d.kop.al2 + "  -  " + d.kop.al3;
+      var szNama = muatKop(d.kop.nama, 29, true);
+      var szAl   = Math.min(muatKop(d.kop.al1, 7.2, false), muatKop(al2gab, 7.2, false));
       k.iWarna(d.DOK.TINTA);
-      k.teks(d.kop.nama, cxA + cwA/2, alasT(Y, 8, 22), 22, true, "c");
-      k.teks(d.kop.al1,  cxA + cwA/2, alasT(Y, 36, 6.6), 6.6, false, "c");
-      k.teks(d.kop.al2 + "  -  " + d.kop.al3, cxA + cwA/2, alasT(Y, 45, 6.6), 6.6, false, "c");
+      k.teks(d.kop.nama, cxA, alasT(Y, 5, szNama), szNama, true, "c");
+      k.teks(d.kop.al1,  cxA, alasT(Y, 38, szAl), szAl, false, "c");
+      k.teks(al2gab,     cxA, alasT(Y, 47, szAl), szAl, false, "c");
       blokKananPDF(k, d, ML, Y, d.DOK.kananAtas);
 
       /* kepala tabel: tiap judul berkotak sendiri, seperti pada blanko */
@@ -804,12 +825,14 @@
       k.iWarna([0,0,0]);
       if(d.rpTeks) k.teks(d.rpTeks, ML + x[3] + kol[3] - 6, alasT(Y, tKaki + 8, 10), 10, true, "r");
 
+      /* Tempat tanda tangan di KEDUA sisi, bercermin dengan jalur Cetak. */
       k.gWarna([0,0,0]); k.tebal(0.7);
-      k.garis(ML + 14, Y(tAkhir + 30), ML + 204, Y(tAkhir + 30));
+      k.garis(ML + 14,  Y(tAkhir + 30), ML + 154, Y(tAkhir + 30));
+      k.garis(ML + 178, Y(tAkhir + 30), ML + 318, Y(tAkhir + 30));
     }
 
-    function gambarSJ(k, d, offY){
-      var ML = 45, Y = pembuatY(offY), W = d.DOK.W, x = d.sjX, kol = d.sjKol;
+    function gambarSJ(k, d, atas){
+      var ML = 45, Y = pembuatY(atas), W = d.DOK.W, x = d.sjX, kol = d.sjKol;
       var tTab = 92, hKep = 18, hBar = 17, nBar = 6;
       var tBar = tTab + hKep, tAkhir = tBar + nBar*hBar;
       var judul = ["Banyaknya", "Nama Barang", "Keterangan"];
@@ -894,34 +917,43 @@
       k.iWarna(d.DOK.TINTA);
       k.teks("Tanda Terima,", ML + 22, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
       k.teks("Hormat Kami,", ML + 330, alasT(Y, tAkhir + 12, 8.5), 8.5, false, "l");
-      k.teks("(  .................................  )", ML + 6, alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
+      var kurung = "(  .................................  )";
+      k.teks(kurung, ML + 6,   alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
+      k.teks(kurung, ML + 314, alasT(Y, tAkhir + 46, 8.5), 8.5, false, "l");
     }
 
-    /* Nota dan Surat Jalan pada SATU lembar, dipisah garis gunting. */
+    /* Satu lembar: Nota di paruh ATAS, Surat Jalan di paruh BAWAH, keduanya
+       ditengahkan pada paruhnya sendiri, dan garis potong tepat di tengah
+       kertas. Sekali sobek menghasilkan dua slip berukuran sama dengan
+       pinggiran seimbang - tidak ada sisa yang perlu digunting lagi.
+       Kalau hanya satu dokumen, dia mengisi paruh ATAS supaya ukuran
+       slipnya tetap sama seperti biasa. */
     function halamanNotaSJ(d, adaNota, adaSJ){
-      var k = new K(), ML = 45, W = d.DOK.W;
-      var offSJ = 0;
-      if(adaNota){
-        gambarNota(k, d, 0);
-        offSJ = NOTA_TINGGI + 2*JARAK_POTONG;
-        if(adaSJ){
-          /* Garisnya DIPATAHKAN di tengah supaya tulisannya tidak tercoret. */
-          var yPotong = PH - 54 - (NOTA_TINGGI + JARAK_POTONG);
-          var label = "potong di sini";
-          var wLab = lebar(label, 7, false), sela = wLab / 2 + 8;
-          k.gWarna(d.DOK.TINTA); k.tebal(0.8);
-          k.p("[3 3] 0 d");
-          k.garis(ML, yPotong, ML + W/2 - sela, yPotong);
-          k.garis(ML + W/2 + sela, yPotong, ML + W, yPotong);
-          k.p("[] 0 d");
-          k.iWarna(d.DOK.TINTA);
-          k.teks(label, ML + W/2, yPotong - 2.5, 7, false, "c");
-        }
+      var k = new K(), ML = 45, W = d.DOK.W, SEPARUH = PH / 2;
+
+      if(adaNota && adaSJ){
+        gambarNota(k, d, (SEPARUH - NOTA_TINGGI) / 2);
+        gambarSJ(k, d, SEPARUH + (SEPARUH - SJ_TINGGI) / 2);
+      }else if(adaNota){
+        gambarNota(k, d, (SEPARUH - NOTA_TINGGI) / 2);
+      }else{
+        gambarSJ(k, d, (SEPARUH - SJ_TINGGI) / 2);
       }
-      if(adaSJ) gambarSJ(k, d, offSJ);
+
+      /* garis potong, dipatahkan di tengah supaya tulisannya tidak tercoret */
+      var yPotong = PH - SEPARUH;
+      var label = "potong di sini";
+      var wLab = lebar(label, 7, false), sela = wLab / 2 + 8;
+      var kiri = 18, kanan = PW - 18;
+      k.gWarna(d.DOK.TINTA); k.tebal(0.8);
+      k.p("[3 3] 0 d");
+      k.garis(kiri, yPotong, PW/2 - sela, yPotong);
+      k.garis(PW/2 + sela, yPotong, kanan, yPotong);
+      k.p("[] 0 d");
+      k.iWarna(d.DOK.TINTA);
+      k.teks(label, PW/2, yPotong - 2.5, 7, false, "c");
       return k.o.join("\n");
     }
-
     function rakit(halaman){
       /* Nomor objek: 1 Katalog, 2 Pages, lalu N objek Halaman, N objek Isi,
          baru dua huruf dan satu gambar. Semua halaman memakai sumber daya
@@ -1894,11 +1926,16 @@
     var trf = barisTransfer(), i, c;
 
     s += eLogo(0, 4, 62);
-    /* nama dan alamat dipusatkan pada ruang antara logo dan blok kanan */
-    var cxA = 66, cwA = DOK.kananX - 12 - cxA;
-    s += eTeks(kop.nama, cxA, 8,  22, {biru:true, tebal:true, tengah:true, w:cwA});
-    s += eTeks(kop.al1,  cxA, 36, 6.6, {biru:true, tengah:true, w:cwA});
-    s += eTeks(kop.al2 + "  -  " + kop.al3, cxA, 45, 6.6, {biru:true, tengah:true, w:cwA});
+    /* Ruang teks kop = antara tepi kanan logo dan tepi kiri blok kanan.
+       Nama perusahaan sengaja dibesarkan supaya mengisi ruang itu, seperti
+       pada blanko aslinya - kalau kekecilan, kop terbaca tidak center. */
+    var xKiri = 62 + 8, xKanan = DOK.kananX - 8;
+    var cwA = xKanan - xKiri;
+    /* Calibri lebih ramping daripada Helvetica di mesin PDF, jadi ukurannya
+       dinaikkan 1,19x supaya lebar cetaknya sama - diukur, bukan dikira. */
+    s += eTeks(kop.nama, xKiri, 4,  34.5, {biru:true, tebal:true, tengah:true, w:cwA});
+    s += eTeks(kop.al1,  xKiri, 40, 8.4, {biru:true, tengah:true, w:cwA});
+    s += eTeks(kop.al2 + "  -  " + kop.al3, xKiri, 49, 8.4, {biru:true, tengah:true, w:cwA});
     s += blokKanan(rec, DOK.kananAtas);
 
     /* kepala tabel: tiap judul berkotak sendiri, seperti pada blanko */
@@ -1931,8 +1968,10 @@
     s += eTeks("Hormat Kami,", 178, tKaki + 9, 8.5, {biru:true});
     s += eTeks("Jumlah Rp.", x[2], tKaki + 9, 8.5, {biru:true, tengah:true, w:NOTA_KOL[2]});
     s += eTeks(fmtRp(m.rp), x[3], tKaki + 8, 10, {kanan:true, tebal:true, w:NOTA_KOL[3] - 6});
-    /* garis untuk tanda tangan penerima */
-    s += '<div class="dk-garis" style="left:14pt;top:' + (tAkhir + 30) + 'pt;width:190pt"></div>';
+    /* Tempat tanda tangan di KEDUA sisi - "Tanda Terima" dan "Hormat Kami"
+       sama-sama perlu dibubuhi tanda tangan. */
+    s += '<div class="dk-garis" style="left:14pt;top:' + (tAkhir + 30) + 'pt;width:140pt"></div>';
+    s += '<div class="dk-garis" style="left:178pt;top:' + (tAkhir + 30) + 'pt;width:140pt"></div>';
 
     return '<div class="dk" style="height:' + (tAkhir + 44) + 'pt">' + s + '</div>';
   }
@@ -1983,7 +2022,9 @@
 
     s += eTeks("Tanda Terima,", 22, tAkhir + 12, 8.5, {biru:true});
     s += eTeks("Hormat Kami,", 330, tAkhir + 12, 8.5, {biru:true});
-    s += eTeks("(  .................................  )", 6, tAkhir + 46, 8.5, {biru:true});
+    var kurung = "(  .................................  )";
+    s += eTeks(kurung, 6, tAkhir + 46, 8.5, {biru:true});
+    s += eTeks(kurung, 314, tAkhir + 46, 8.5, {biru:true});
 
     return '<div class="dk" style="height:' + (tAkhir + 62) + 'pt">' + s + '</div>';
   }
@@ -2197,18 +2238,40 @@
     {kode:"sj",        nama:"Surat Jalan saja", berkas:"Surat-Jalan", ket:""}
   ];
 
-  function garisPotong(){
-    return '<div class="dk-potong"><span>- - -  potong di sini  - - -</span></div>';
+  /* Tinggi kedua slip dan separuh kertas. Dipakai bersama jalur Cetak dan
+     PDF supaya pembagiannya sama persis. */
+  var NOTA_H = 302, SJ_H = 274, SEPARUH = 420.945;
+
+  /* Satu lembar berisi Nota di paruh atas dan Surat Jalan di paruh bawah,
+     masing-masing DITENGAHKAN pada paruhnya. Garis potong tepat di tengah
+     kertas, jadi sekali sobek menghasilkan dua slip berukuran sama dengan
+     pinggiran seimbang - tanpa sisa yang perlu digunting lagi.
+     Kalau hanya satu dokumen yang dicetak, dia mengisi paruh ATAS supaya
+     ukuran slipnya tetap sama seperti biasa. */
+  function halamanSlip(nota, sj){
+    var s = '<div class="halaman">';
+    var atasNota = (SEPARUH - NOTA_H) / 2;
+    var atasSJ   = SEPARUH + (SEPARUH - SJ_H) / 2;
+    if(nota && sj){
+      s += '<div class="dk-slip" style="top:' + atasNota + 'pt">' + nota + '</div>';
+      s += '<div class="dk-slip" style="top:' + atasSJ + 'pt">' + sj + '</div>';
+    }else{
+      var satu = nota || sj;
+      var tinggi = nota ? NOTA_H : SJ_H;
+      s += '<div class="dk-slip" style="top:' + ((SEPARUH - tinggi) / 2) + 'pt">' + satu + '</div>';
+    }
+    s += '<div class="dk-potong"><span>potong di sini</span></div>';
+    return s + '</div>';
   }
 
-  /* Halaman apa saja yang dicetak untuk tiap pilihan. Nota dan Surat Jalan
-     selalu berbagi SATU lembar dengan garis potong di antaranya. */
+  /* Halaman apa saja yang dicetak untuk tiap pilihan. */
   function halamanUntuk(rec, kode){
-    if(kode === "timbangan") return [sheet(rec)];
-    if(kode === "nota")      return [notaHTML(rec)];
-    if(kode === "sj")        return [sjHTML(rec)];
-    if(kode === "notasj")    return [notaHTML(rec) + garisPotong() + sjHTML(rec)];
-    return [sheet(rec), notaHTML(rec) + garisPotong() + sjHTML(rec)];   /* semua */
+    var timbangan = '<div class="halaman hal-timbangan">' + sheet(rec) + '</div>';
+    if(kode === "timbangan") return [timbangan];
+    if(kode === "nota")      return [halamanSlip(notaHTML(rec), null)];
+    if(kode === "sj")        return [halamanSlip(null, sjHTML(rec))];
+    if(kode === "notasj")    return [halamanSlip(notaHTML(rec), sjHTML(rec))];
+    return [timbangan, halamanSlip(notaHTML(rec), sjHTML(rec))];        /* semua */
   }
 
   /* window.print() memotret halaman SEKETIKA. Kalau logo belum selesai diurai
@@ -2217,9 +2280,7 @@
   function cetakLangsung(rec, kode){
     var akar = document.getElementById("print-root");
     var hal = halamanUntuk(rec, kode || "timbangan");
-    var isi = "", i;
-    for(i=0;i<hal.length;i++) isi += '<div class="halaman">' + hal[i] + '</div>';
-    akar.innerHTML = isi;
+    akar.innerHTML = hal.join("");
 
     var gambar = akar.querySelectorAll("img");
     var sudah = false;
