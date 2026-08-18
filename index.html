@@ -257,16 +257,18 @@
   .ps{position:relative;width:505.28pt;height:734pt;margin:0 auto;color:#000;background:#fff;
     font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .ps-logo{position:absolute;left:0;top:15.8pt;width:120pt;height:95.4pt;object-fit:contain}
-  /* Dipusatkan pada ruang di kanan logo (logo 120pt), bukan pada seluruh lebar
-     lembar - alasannya ada di penggambar kop PDF. */
-  .ps-t{position:absolute;left:120pt;width:385.28pt;text-align:center;white-space:nowrap}
-  .ps-t1{top:15pt;line-height:21pt;font-size:16pt;font-weight:700}
-  .ps-t2{top:36pt;line-height:30pt;font-size:30pt;font-weight:700}
-  .ps-t3{top:66pt;line-height:15pt;font-size:10pt}
-  .ps-t4{top:81pt;line-height:15pt;font-size:10pt}
-  .ps-t5{top:96pt;line-height:15pt;font-size:11pt;font-weight:700}
-  .ps-rule{position:absolute;left:0;top:124pt;width:505.28pt;border-bottom:3pt double #000}
+  .ps-logo{position:absolute;left:0;top:8pt;width:142pt;height:112.9pt;object-fit:contain}
+  /* Kop = SATU kesatuan, bukan dua pulau. Logo 142pt rata kiri, lalu blok
+     teks memenuhi sisa lebar dan dipusatkan di situ, sehingga jarak ke logo
+     dan ke tepi kanan sama besar. Ukuran huruf dipilih supaya baris
+     terlebar hampir mengisi ruangnya - angkanya sama dengan mesin PDF. */
+  .ps-t{position:absolute;left:142pt;width:363.28pt;text-align:center;white-space:nowrap}
+  .ps-t1{top:8pt;line-height:23pt;font-size:20.4pt;font-weight:700}
+  .ps-t2{top:31pt;line-height:41pt;font-size:40.8pt;font-weight:700}
+  .ps-t3{top:72pt;line-height:16pt;font-size:12.35pt}
+  .ps-t4{top:88pt;line-height:16pt;font-size:12.35pt}
+  .ps-t5{top:104pt;line-height:17pt;font-size:13.6pt;font-weight:700}
+  .ps-rule{position:absolute;left:0;top:129pt;width:505.28pt;border-bottom:3pt double #000}
 
   .ps-tab{position:absolute;left:0;width:505.28pt}
   .ps-tabA{top:144pt}
@@ -718,8 +720,8 @@
          Perbandingan sisi mengikuti bingkai di Excel (143,6 x 114,2 pt), tetapi
          sedikit diperkecil supaya teks kop bisa benar-benar di tengah lembar
          tanpa menabraknya. Ditaruh rata kiri, di tengah tinggi blok kop. */
-      var logoW = 120, logoH = logoW * LOGO_H / LOGO_W;
-      var logoT = (127 - logoH) / 2;
+      var logoW = 142, logoH = logoW * LOGO_H / LOGO_W;   /* 142 x 112,9 pt */
+      var logoT = 8;
       k.gambar("Im1", ML, Y(logoT + logoH), logoW, logoH);
 
       /* ---------- kop ----------
@@ -728,31 +730,41 @@
          sementara di kanan menganga 129pt. Karena itu teks dipusatkan pada
          RUANG DI SEBELAH KANAN LOGO, sehingga jarak kiri dan kanannya sama
          besar dan kop terbaca seimbang. */
-      var JARAK_LOGO = 12;                      /* jarak terkecil teks ke logo */
+      var JARAK_LOGO = 16;                      /* jarak terkecil teks ke logo */
       var cxKop = ML + (logoW + TW) / 2;
 
       var lebarAman = (TW - logoW) - 2 * JARAK_LOGO;
 
-      /* Ukuran huruf: pakai ukuran Excel, tetapi jangan pernah lebih lebar
-         daripada yang dihasilkan Calibri di sana — itu pula yang menjaga teks
-         tetap rapi kalau pengguna mengubah isi kop. */
-      function kopBaris(s, t, h, nominal, lebarExcel, bold){
+      /* Ukuran huruf diturunkan dari LEBAR SASARAN, bukan dipatok angka.
+         Dengan begitu blok kop selalu mengisi ruangnya secara seimbang
+         walau isi kop diganti, dan tidak pernah melebihi lebar aman.
+         "bagian" = seberapa penuh baris itu mengisi ruang teks. */
+      function ukuranKop(s, bagian, batas, bold){
         var w1 = lebar(s, 1, bold);
-        var maxW = Math.min(lebarExcel, lebarAman);
-        var sz = w1 ? Math.min(nominal, maxW / w1) : nominal;
+        if(!w1) return batas;
+        return Math.min(batas, lebarAman * bagian / w1);
+      }
+      function kopBaris(s, t, h, sz, bold){
+        if(!s) return;
         k.teks(s, cxKop, Y(t + h/2 + sz*0.35), sz, bold, "c");
       }
       k.iWarna(HITAM);
-      kopBaris("DAFTAR TIMBANGAN", 15, 21, 16, 143.2, true);
-      kopBaris(d.kop.nama,         36, 30, 30, 231.2, true);
-      kopBaris(d.kop.al1,          66, 15, 10, 246.9, false);
-      kopBaris(d.kop.al2,          81, 15, 10, 246.9, false);
-      kopBaris(d.kop.al3,          96, 15, 11, 246.9, true);
+      /* Alamat baris 1 dan 2 WAJIB seukuran; telepon sedikit lebih besar. */
+      var szJudul  = ukuranKop("DAFTAR TIMBANGAN", 0.55, 21, true);
+      var szNama   = ukuranKop(d.kop.nama,          0.95, 42, true);
+      var szAlamat = ukuranKop(d.kop.al1,           0.92, 13, false);
+      var szTelp   = Math.min(szAlamat * 1.10, ukuranKop(d.kop.al3, 0.95, 14, true));
+
+      kopBaris("DAFTAR TIMBANGAN",   8, 23, szJudul,  true);
+      kopBaris(d.kop.nama,           31, 41, szNama,   true);
+      kopBaris(d.kop.al1,            72, 16, szAlamat, false);
+      kopBaris(d.kop.al2,            88, 16, szAlamat, false);
+      kopBaris(d.kop.al3,           104, 17, szTelp,   true);
 
       /* garis ganda di bawah kop (Excel: border "double" pada baris 8) */
       k.gWarna(HITAM); k.tebal(TIPIS);
-      k.garis(ML, Y(125.5), TR, Y(125.5));
-      k.garis(ML, Y(128.5), TR, Y(128.5));
+      k.garis(ML, Y(130), TR, Y(130));
+      k.garis(ML, Y(133), TR, Y(133));
 
       /* ---------- dua blok tabel ----------
          Garis tegak semuanya "medium", garis mendatar antar baris "thin". */
