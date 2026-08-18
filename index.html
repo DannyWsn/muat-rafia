@@ -83,6 +83,10 @@
   .stat-val .u{font-size:11px;font-weight:500;color:#93AECC;margin-left:3px;letter-spacing:.06em}
   .stat.tonase .stat-val{color:var(--gold-2)}
   .stat.rupiah .stat-val{color:#7FD1A6;font-size:19px}
+  .hrec-tanda{font-size:11px;margin:5px 0 0;padding:3px 7px;border-radius:3px;display:inline-block;border:1px solid}
+  .hrec-tanda.pusat{background:#E6F4EC;border-color:#9BD0B4;color:#1C6B45}
+  .hrec-tanda.menunggu{background:var(--warn-bg);border-color:#E2C877;color:var(--warn-ink)}
+  .hrec-tanda.lokal{background:var(--card-2);border-color:var(--line);color:var(--ink-2)}
   .pusat-status{font-size:12px;padding:7px 9px;border-radius:3px;margin:0 0 9px;border:1px solid}
   .pusat-status.mati{background:var(--card-2);border-color:var(--line);color:var(--ink-2)}
   .pusat-status.ok{background:#E6F4EC;border-color:#9BD0B4;color:#1C6B45}
@@ -1959,6 +1963,24 @@
     }catch(e){}
     return n;
   }
+  /* Tiga keadaan sebuah muat terhadap pusat:
+       - menunggu  : sudah dipilih untuk dikirim, belum sampai (biasanya sinyal)
+       - di pusat  : sudah ada di Spreadsheet, terlihat di HP lain
+       - HP saja   : sengaja tidak dikirim, atau belum pernah dikirim */
+  function keadaanPusat(rec){
+    if(!pusatAktif()) return "";
+    if(antre.indexOf(rec.id) >= 0) return "menunggu";
+    return rec.oleh ? "pusat" : "lokal";
+  }
+  function perluKirim(rec){ return keadaanPusat(rec) === "lokal"; }
+  function tandaPusat(rec){
+    var k = keadaanPusat(rec);
+    if(!k) return "";
+    if(k === "menunggu") return '<div class="hrec-tanda menunggu">Menunggu terkirim ke pusat</div>';
+    if(k === "pusat")    return '<div class="hrec-tanda pusat">Ada di pusat — terlihat di semua HP</div>';
+    return '<div class="hrec-tanda lokal">Hanya di HP ini</div>';
+  }
+
   function renderHist(){
     var list = histAll();
     document.getElementById("hist-count").textContent = list.length ? list.length + " muat tersimpan" : "";
@@ -1981,6 +2003,7 @@
         '<div class="hrec-top"><span class="hrec-truk">' + esc(rec.noTruk || "Tanpa no truk") + '</span>' +
         '<span class="hrec-tgl">' + esc(tglPendek(rec.tanggal)) + '</span></div>' +
         '<div class="hrec-sub">Penerima: ' + esc(rec.penerima || "–") + '</div>' +
+        tandaPusat(rec) +
         '<div class="hrec-nums">' +
           '<span><span class="hnum-lab">Roll</span><br><span class="hnum-val">' + esc(rec.roll) + '<span class="u">roll</span></span></span>' +
           '<span><span class="hnum-lab">Tonase</span><br><span class="hnum-val">' + fmt2(rec.tonase) + '<span class="u">kg</span></span></span>' +
@@ -1989,6 +2012,7 @@
           '<button class="btn mini" data-act="buka" data-id="' + esc(rec.id) + '">Buka</button>' +
           '<button class="btn mini gold" data-act="pdf" data-id="' + esc(rec.id) + '">PDF</button>' +
           '<button class="btn mini" data-act="cetak" data-id="' + esc(rec.id) + '">Cetak</button>' +
+          (perluKirim(rec) ? '<button class="btn mini" data-act="kirim" data-id="' + esc(rec.id) + '">Kirim</button>' : '') +
           '<button class="btn mini danger" data-act="hapus" data-id="' + esc(rec.id) + '">Hapus</button>' +
         '</div></article>';
     }).join("");
@@ -2018,6 +2042,14 @@
           ya: "Tetap buka", gaya: "danger", onYa: bukaSaja
         });
       }else bukaSaja();
+    }
+    if(act === "kirim"){
+      if(!pusatAktif()){ toast("Pusat data belum diatur"); return; }
+      antreTambah(rec.id);
+      renderHist();
+      toast("Mengirim ke pusat…");
+      sinkron(true);
+      return;
     }
     if(act === "cetak") cetak(rec, "print");
     if(act === "pdf") cetak(rec, "pdf");
@@ -2759,10 +2791,35 @@
     }
     tersimpanKeHistori = true;
     tulisDraft();
-    antreTambah(rec.id);
     renderHist();
-    toast(pusatAktif() ? "Muat tersimpan · mengirim ke pusat" : "Muat tersimpan ke histori");
-    sinkron(true);        /* tidak ditunggu: menimbang tidak boleh tergantung sinyal */
+
+    /* Kalau pusat data belum diatur, tidak ada yang perlu ditanyakan. */
+    if(!pusatAktif()){
+      toast("Muat tersimpan ke histori");
+      return;
+    }
+
+    /* Pemakai yang menentukan muat ini ikut ke pusat atau tidak. */
+    dialog({
+      judul: "Muat tersimpan. Kirim ke pusat?",
+      isi: "<p>Muat <b>" + esc(rec.noTruk) + "</b> sudah aman tersimpan di HP ini.</p>" +
+           "<p class=\"muted\">Kalau dikirim ke pusat, muat ini ikut terlihat di HP lain. " +
+           "Kalau tidak, dia hanya ada di HP ini - dan masih bisa dikirim kapan saja lewat tombol " +
+           "<b>Kirim</b> pada kartunya di daftar histori.</p>",
+      aksi: [
+        {label:"Kirim ke pusat", utama:true,
+         ket:"Terlihat di semua HP. Kalau tidak ada sinyal, terkirim sendiri nanti.",
+         fn:function(){
+           antreTambah(rec.id);
+           renderHist();
+           sinkron(true);   /* tidak ditunggu: menimbang tidak boleh tergantung sinyal */
+         }},
+        {label:"Simpan di HP ini saja",
+         ket:"Tidak masuk ke pusat. Bisa dikirim belakangan.",
+         fn:function(){ toast("Tersimpan di HP ini saja"); renderHist(); }}
+      ],
+      tidak: "Nanti saja"
+    });
   });
 
   document.getElementById("b-cetak").addEventListener("click", function(){ cetak(collect(), "print"); });
