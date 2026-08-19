@@ -2,7 +2,7 @@
 
 > Dokumen ini ditulis supaya sesi Claude berikutnya **langsung paham tanpa
 > bertanya-tanya**. Baca ini lebih dulu sebelum menyentuh kode.
-> Terakhir diperbarui: 20 Agustus 2026 · aplikasi `sw.js` v18.
+> Terakhir diperbarui: 20 Agustus 2026 · aplikasi `sw.js` v20.
 
 ---
 
@@ -392,7 +392,27 @@ Semua ini pernah benar-benar terjadi di proyek ini.
     ruang nama menyempit. `.brand-txt` harus `flex:1 1 auto;min-width:0;
     overflow:hidden` dan `.brand-name` harus `display:block`, kalau tidak
     titik-tiga tidak pernah bekerja dan tulisannya bertumpuk.
-14. **`lapor()` pernah dipanggil dengan EMPAT argumen** pada tombol Unduh
+15. **GOOGLE SHEETS MENGUBAH TANGGAL MENJADI `Date`.** Teks `"2026-08-18"`
+    yang ditulis aplikasi berubah menjadi tanggal sungguhan di dalam sel, lalu
+    `baca()` mengirimnya lewat `String(sel)` sehingga HP menerima
+    `"Tue Aug 18 2026 00:00:00 GMT+0700 (Waktu Indonesia Barat)"`.
+    Akibatnya di HP penerima: tanggal di kartu KOSONG, kelompoknya
+    "Tanpa tanggal", kotak Tanggal kosong saat muat dibuka (sehingga kalau
+    langsung dicetak tanggalnya hilang dari Nota), nama berkas PDF memakai
+    tanggal HARI INI, dan urutan daftar salah karena diurutkan sebagai teks.
+    Yang paling menipu: **muat itu ikut rusak di HP yang MEMBUATNYA**, karena
+    salinan dari pusat menimpa yang lokal (`>=` pada `diubah`). Notanya
+    yang dicetak pada hari muat tetap benar — jadi gejalanya tampak
+    bertentangan. Dijaga oleh `normalTgl()` di `terapkanMuat`, dan
+    `tglTeks()` di Apps Script.
+16. **MEMPERBAIKI GERBANG MASUK TIDAK MENYEMBUHKAN DATA YANG SUDAH TERSIMPAN.**
+    Sesudah `normalTgl()` dipasang, muat yang sudah rusak tetap rusak —
+    pusat hanya mengirim ulang muat yang `diterima`-nya lebih baru dari
+    penanda waktu HP, jadi muat lama tidak pernah datang lagi. Karena itu ada
+    `sembuhkanTanggal()` yang berjalan sekali setiap aplikasi dibuka.
+    **Setiap perbaikan bentuk data harus ditanya: apa yang sudah tersimpan
+    salah, dan bagaimana ia sembuh tanpa menyuruh pemilik menekan apa-apa?**
+17. **`lapor()` pernah dipanggil dengan EMPAT argumen** pada tombol Unduh
     Cadangan (`lapor(nama, blob, unduhBlob(...), "Cadangan")`) padahal hanya
     menerima tiga — judul dialognya berbunyi "true siap" dan berkas terunduh
     dua kali. Sudah diperbaiki 20 Agustus 2026.
@@ -421,6 +441,9 @@ lewat tombol seperti pemakai, lalu ukur keluarannya.**
 | `uji-tahap23.mjs` | 17 pemeriksaan: logo layar PNG tembus pandang + nama berkas PDF dari berkas yang BENAR-BENAR terunduh |
 | `uji-tahap4.mjs` | 45 pemeriksaan: layar Pengaturan, cari/saring, kelompok tanggal, tombol 44px, menu ⋯, bilah atas di 320/360/412 |
 | `uji-cetak-sama.mjs` | **paritas cetak**: PDF sebelum vs sesudah perubahan, posisi tiap kata dibandingkan sampai 0,01 titik |
+| `cek-pusat-baca.mjs` | periksa pusat SUNGGUHAN tanpa menulis apa pun (peran, kolom yang dikirim, isi terbaru) |
+| `uji-tanggal-sembuh.mjs` | 8 pemeriksaan: tanggal bentuk Sheets masuk lewat jalur sinkron dan keluar sebagai YYYY-MM-DD |
+| `uji-sembuhkan.mjs` | 8 pemeriksaan: HP yang SUDAH berisi tanggal rusak sembuh sendiri saat dibuka |
 
 ⚠️ **`uji-pusat.mjs` dan `uji-aman.mjs` menuntut pusat tiruan yang BERSIH.**
 `tiruan-pusat.mjs` menyimpan data di memori, jadi kalau sudah dipakai uji lain
