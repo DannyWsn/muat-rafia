@@ -2,7 +2,7 @@
 
 > Dokumen ini ditulis supaya sesi Claude berikutnya **langsung paham tanpa
 > bertanya-tanya**. Baca ini lebih dulu sebelum menyentuh kode.
-> Terakhir diperbarui: 19 Agustus 2026 · aplikasi `sw.js` v15.
+> Terakhir diperbarui: 19 Agustus 2026 · aplikasi `sw.js` v16.
 
 ---
 
@@ -374,25 +374,39 @@ Langkahnya:
 Aman untuk data yang sudah ada: kolom baru di paling belakang, baris judul
 melengkapi diri sendiri.
 
-### 10.2 Rencana keamanan data — sudah disepakati, belum dikerjakan
+### 10.2 Rencana keamanan data — SUDAH DIKERJAKAN (19 Agustus 2026)
 
-Diurutkan menurut bahaya sesungguhnya. Angka hasil pengukuran: satu muat penuh
-**1,0 KB**, batas penyimpanan HP **5,0 MB**, muat ± **5.000**, penuh dalam
-±2,3 tahun pada 6 muat/hari.
+Angka hasil pengukuran: satu muat penuh **1,0 KB**, batas penyimpanan HP
+**5,0 MB**, muat ± **5.000**, penuh dalam ±2,3 tahun pada 6 muat/hari. Kalau
+penuh, penyimpanan menolak dan aplikasi memberi peringatan merah — data lama
+tidak hilang dan mencetak tetap jalan.
 
-1. **Izin penyimpanan permanen** — hasil ukur: `navigator.storage.persisted()`
-   = **false**. Artinya Chrome boleh membuang data situs saat memori HP sesak,
-   **walau penyimpanan aplikasi baru terpakai 1%**. Ini bahaya nomor satu dan
-   tidak ada hubungannya dengan penuh. Penangkal: `navigator.storage.persist()`.
-2. **Pemicu Spreadsheet + tombol Tarik Ulang Semua** — pemilik orang Excel dan
-   pasti akan menyunting Spreadsheet langsung. Suntingan tangan **tidak**
-   memperbarui `diterima`, sehingga HP tidak pernah menariknya. Penangkal:
-   pemicu `onEdit` yang mengisi `diterima`, plus tombol tarik-ulang di aplikasi.
-3. **Peringatan jam HP meleset** — jam yang salah membuat `diubah` salah,
-   sehingga versi yang keliru bisa menang. Bandingkan jam HP dengan `waktu`
-   dari pusat, peringatkan kalau selisihnya besar.
-4. Penanda mencolok untuk muat yang belum pernah masuk pusat.
-5. Pembersihan otomatis muat lama yang **sudah dipastikan ada di pusat**.
+Yang sudah terpasang:
+
+1. **Izin penyimpanan permanen** (`navigator.storage.persist()`) diminta saat
+   aplikasi dibuka. Hasil ukur sebelumnya `persisted()` = **false**, artinya
+   browser boleh membuang data situs saat memori HP sesak walau pemakaian baru
+   1%. Ini bahaya nomor satu dan tidak ada hubungannya dengan penuh. Kalau izin
+   belum diberikan, papan keadaan menulis "penyimpanan permanen BELUM aktif";
+   memasang aplikasi ke layar utama sangat menaikkan peluang diberikan.
+2. **Pemicu `onEdit` di Apps Script** mengisi `diubah` dan `diterima` setiap
+   kali baris disunting TANGAN di Spreadsheet, sehingga koreksi pemilik ikut
+   mengalir ke semua HP. Tanpa ini, suntingan manual tidak pernah sampai ke HP.
+   Ditambah tombol **Tarik Ulang Semua** di aplikasi (menolkan penanda waktu
+   lalu menarik seluruh isi pusat).
+3. **Peringatan jam HP meleset** — kalau selisih jam HP dengan pusat lebih dari
+   5 menit, muncul dialog sekali. Jam yang salah membuat versi keliru dianggap
+   lebih baru.
+4. **Penanda mencolok** di papan keadaan: "N muat belum pernah masuk pusat —
+   hanya ada di HP ini, ikut hilang kalau HP hilang". Papan ini menyegarkan diri
+   setiap kali daftar berubah.
+5. **Tombol Rapikan Muat Lama** — membuang muat lama dari HP, menyisakan 200
+   terbaru. **SENGAJA tidak otomatis**: menghapus data pemakai tanpa diminta itu
+   tidak pantas. Hanya muat yang sudah dipastikan ada di pusat yang dibuang;
+   muat bertanda "Hanya di HP ini" tidak pernah disentuh.
+
+Diuji 7 pemeriksaan khusus, ditambah 19 sinkron dua HP + 5 ubah-muat + 9 roll
+yang tetap lulus.
 
 ### 10.3 Rencana jangka panjang pemilik
 

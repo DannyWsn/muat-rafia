@@ -488,6 +488,8 @@
             <button class="btn mini" id="b-uji" type="button">Uji Sambungan</button>
             <button class="btn mini" id="b-sinkron" type="button">Sinkronkan Sekarang</button>
             <button class="btn mini" id="b-unggah" type="button">Kirim Semua Histori HP Ini</button>
+            <button class="btn mini" id="b-tarik" type="button">Tarik Ulang Semua</button>
+            <button class="btn mini" id="b-rapikan" type="button">Rapikan Muat Lama</button>
           </div>
         </div>
       </div>
@@ -1714,7 +1716,33 @@
     writeLS(LS_HP, idHP);
   }
 
+  /* ---------- penyimpanan permanen ----------
+     Tanpa izin ini, browser boleh membuang seluruh data situs saat memori HP
+     sesak - walau pemakaian aplikasi masih jauh dari penuh. Ini bahaya nomor
+     satu bagi muat yang belum terkirim ke pusat. Izinnya diminta sekali di
+     awal; browser lebih murah hati kalau aplikasi sudah dipasang ke layar. */
+  var simpanPermanen = null;
+  function periksaPermanen(){
+    if(!navigator.storage || !navigator.storage.persisted) return Promise.resolve(null);
+    return navigator.storage.persisted().then(function(sudah){
+      if(sudah){ simpanPermanen = true; tulisStatusPusat(); return true; }
+      if(!navigator.storage.persist) { simpanPermanen = false; return false; }
+      return navigator.storage.persist().then(function(diberi){
+        simpanPermanen = !!diberi;
+        tulisStatusPusat();
+        return simpanPermanen;
+      });
+    }).catch(function(){ return null; });
+  }
+
   function pusatAktif(){ return !!(pusat.url && pusat.kode); }
+  /* muat yang belum pernah masuk pusat - ikut hilang kalau HP hilang */
+  function jumlahLokal(){
+    if(!pusatAktif()) return 0;
+    var l = histAll(), c = 0;
+    for(var i=0;i<l.length;i++) if(keadaanPusat(l[i]) === "lokal") c++;
+    return c;
+  }
   function bolehHapus(){ return !pusatAktif() || pusat.peran === "pemilik"; }
 
   function simpanPusat(){ writeLS(LS_PUSAT, pusat); }
@@ -1786,6 +1814,7 @@
       .then(function(j){
         if(!j || !j.ok) throw new Error(j && j.pesan ? j.pesan : "pusat menolak");
         pusat.peran = j.peran || "";
+        periksaJam(j.waktu);
         var tolakId = {};
         (j.ditolak || []).forEach(function(t){ tolakId[t.id] = t.sebab; });
         /* Semuanya keluar dari antrean, termasuk yang DITOLAK. Menahan yang
@@ -1849,9 +1878,40 @@
       el.textContent = (antre.length + hapusAntre.length) + " perubahan belum terkirim — aman tersimpan di HP.";
       return;
     }
+    var lokal = jumlahLokal();
+    if(lokal){
+      /* Ini bukan kesalahan, tetapi harus terlihat: muat ini hanya ada di HP
+         ini, jadi ikut hilang kalau HP hilang atau rusak. */
+      el.className = "pusat-status tunggu";
+      el.textContent = "Tersinkron · " + lokal + " muat belum pernah masuk pusat " +
+        "— hanya ada di HP ini, ikut hilang kalau HP hilang.";
+      return;
+    }
     el.className = "pusat-status ok";
     el.textContent = "Tersinkron" + (pusat.peran ? " sebagai " + pusat.peran : "") +
-      (pusat.sejak ? " · " + jamPendek(pusat.sejak) : "") + ".";
+      (pusat.sejak ? " · " + jamPendek(pusat.sejak) : "") +
+      (simpanPermanen === false ? " · penyimpanan permanen BELUM aktif" : "") + ".";
+  }
+
+  /* Jam HP yang meleset jauh membuat penanda waktu salah, sehingga saat dua
+     HP menyunting muat yang sama, versi yang keliru bisa dianggap lebih baru.
+     Diperingatkan SEKALI saja per pembukaan aplikasi supaya tidak mengganggu. */
+  var jamSudahDiperingatkan = false;
+  function periksaJam(waktuPusat){
+    if(!waktuPusat || jamSudahDiperingatkan) return;
+    var selisih = Math.abs(Date.now() - waktuPusat);
+    if(selisih < 5 * 60 * 1000) return;          /* di bawah 5 menit, abaikan */
+    jamSudahDiperingatkan = true;
+    var menit = Math.round(selisih / 60000);
+    dialog({
+      judul: "Jam HP ini meleset",
+      isi: "<p>Jam HP ini berbeda <b>" + menit + " menit</b> dari jam pusat data.</p>" +
+           "<p class=\"muted\">Penanda waktu dipakai untuk menentukan versi mana yang " +
+           "paling baru. Kalau jamnya meleset jauh, suntingan lama bisa dianggap " +
+           "lebih baru daripada yang baru. Betulkan jam HP lewat Setelan, " +
+           "sebaiknya disetel otomatis.</p>",
+      ya: "Mengerti", tanpaBatal: true
+    });
   }
 
   function jamPendek(ms){
@@ -1926,6 +1986,54 @@
     document.getElementById("b-sinkron").addEventListener("click", function(){
       if(!pusatAktif()){ toast("Pusat data belum diatur"); return; }
       sinkron();
+    });
+
+    /* Dipakai kalau Spreadsheet disunting langsung dengan tangan, atau kalau
+       HP ini dicurigai ketinggalan. Penanda waktu dinolkan supaya seluruh isi
+       pusat ditarik ulang, bukan hanya yang dianggap baru. */
+    document.getElementById("b-tarik").addEventListener("click", function(){
+      if(!pusatAktif()){ toast("Pusat data belum diatur"); return; }
+      dialog({
+        judul: "Tarik ulang semua dari pusat?",
+        isi: "<p>Seluruh isi pusat ditarik ulang dan menimpa salinan di HP ini.</p>" +
+             "<p class=\"muted\">Berguna kalau Spreadsheet baru disunting langsung. " +
+             "Muat yang belum terkirim TIDAK hilang — dia tetap di antrean.</p>",
+        ya: "Tarik ulang",
+        onYa: function(){ pusat.sejak = 0; simpanPusat(); sinkron(); }
+      });
+    });
+
+    /* Merapikan penyimpanan HP. SENGAJA tidak otomatis: menghapus data
+       pemakai tanpa diminta itu tidak pantas. Yang dibuang HANYA muat yang
+       sudah dipastikan ada di pusat, jadi salinannya tetap aman di
+       Spreadsheet dan bisa ditarik lagi kapan saja. */
+    document.getElementById("b-rapikan").addEventListener("click", function(){
+      if(!pusatAktif()){ toast("Pusat data belum diatur"); return; }
+      var SISA = 200;
+      var l = histAll();
+      var bisa = [];
+      for(var i=SISA;i<l.length;i++) if(keadaanPusat(l[i]) === "pusat") bisa.push(l[i].id);
+      if(!bisa.length){
+        toast("Belum ada yang perlu dirapikan (menyimpan " + l.length + " muat)");
+        return;
+      }
+      dialog({
+        judul: "Rapikan muat lama?",
+        isi: "<p><b>" + bisa.length + " muat lama</b> akan dibuang dari HP ini. " +
+             "Yang terbaru (" + SISA + " muat) tetap tersimpan.</p>" +
+             "<p class=\"muted\">Hanya muat yang sudah dipastikan ada di pusat yang dibuang, " +
+             "jadi datanya tetap aman di Spreadsheet dan bisa ditarik lagi kapan saja. " +
+             "Muat yang bertanda <b>Hanya di HP ini</b> tidak akan disentuh.</p>",
+        ya: "Rapikan", gaya: "danger",
+        onYa: function(){
+          var buang = {};
+          bisa.forEach(function(id){ buang[id] = 1; });
+          writeLS(LS_HIST, histAll().filter(function(x){ return !buang[x.id]; }));
+          renderHist();
+          tulisStatusPusat();
+          toast(bisa.length + " muat lama dibuang dari HP — tetap aman di pusat");
+        }
+      });
     });
 
     /* Dipakai sekali saat pertama memasang pusat data: mengangkat histori
@@ -2005,6 +2113,10 @@
 
   function renderHist(){
     var list = histAll();
+    /* Papan keadaan pusat ikut disegarkan: jumlah muat yang hanya ada di HP
+       ini berubah setiap kali daftar berubah, dan justru saat itulah pemakai
+       perlu tahu - bukan menunggu sinkron berikutnya. */
+    setTimeout(tulisStatusPusat, 0);
     document.getElementById("hist-count").textContent = list.length ? list.length + " muat tersimpan" : "";
 
     var byte = ukuranData(), batas = 4 * 1024 * 1024;
@@ -2146,6 +2258,7 @@
           Object.keys(kopEls).forEach(function(k){ document.getElementById(kopEls[k]).value = kop[k]; });
           paintBrand();
   tulisStatusPusat();
+  periksaPermanen();
   sinkron(true);        /* diam-diam: kalau gagal, aplikasi tetap jalan seperti biasa */
         }
         renderHist();
