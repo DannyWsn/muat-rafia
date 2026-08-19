@@ -445,7 +445,8 @@
           <div class="fields">
             <label class="f"><span class="f-lab">Tanggal</span><input type="date" id="i-tanggal"></label>
             <label class="f"><span class="f-lab">No Truk</span><input type="text" id="i-truk" placeholder="G 8726 MG" autocapitalize="characters"></label>
-            <label class="f wide"><span class="f-lab">Penerima</span><input type="text" id="i-penerima" placeholder="Bp. Rifai Brebes"></label>
+            <label class="f"><span class="f-lab">Penerima</span><input type="text" id="i-penerima" placeholder="Bp. Rifai"></label>
+            <label class="f"><span class="f-lab">Toko / Kota</span><input type="text" id="i-tujuan" placeholder="Brebes"></label>
             <label class="f wide"><span class="f-lab">Nama Barang</span><input type="text" id="i-barang" placeholder="Rafia Kw 3"></label>
             <label class="f"><span class="f-lab">Harga @ / kg</span><input type="text" id="i-harga" inputmode="decimal" placeholder="11500"></label>
             <label class="f"><span class="f-lab">Kendaraan</span><input type="text" id="i-kendaraan" placeholder="Truck"></label>
@@ -804,9 +805,10 @@
     function blokKananPDF(k, d, ML, Y, atas){
       var X = ML + d.DOK.kananX, LB = d.DOK.kananLab, J = d.DOK.kananJarak;
       var xi = X + LB, kanan = ML + d.DOK.W, i;
+      /* baris pertama = kota perusahaan; baris "Toko" = kota tujuan muat */
       var baris = [[d.kop.kota + ",", d.tanggalPanjang],
                    ["Tuan", d.penerima || ""],
-                   ["Toko", ""]];
+                   ["Toko", d.tujuan || ""]];
       for(i=0;i<3;i++){
         var y = atas + i*J;
         k.iWarna(d.DOK.TINTA);
@@ -1331,6 +1333,7 @@
   var elTgl  = document.getElementById("i-tanggal");
   var elTruk = document.getElementById("i-truk");
   var elPen  = document.getElementById("i-penerima");
+  var elTujuan = document.getElementById("i-tujuan");
   var elBarang = document.getElementById("i-barang");
   var elHarga  = document.getElementById("i-harga");
   var elKend   = document.getElementById("i-kendaraan");
@@ -1580,7 +1583,7 @@
     clearTimeout(draftTimer);
     draftTimer = setTimeout(tulisDraft, 200);
   }
-  [elTgl, elTruk, elPen, elBarang, elHarga, elKend, elSJ]
+  [elTgl, elTruk, elPen, elTujuan, elBarang, elHarga, elKend, elSJ]
     .forEach(function(el){ el.addEventListener("input", saveDraft); });
 
   /* Harga boleh diisi kapan saja - termasuk setelah setengah muat sudah
@@ -1657,6 +1660,7 @@
     return {
       id: currentId, tanggal: elTgl.value,
       noTruk: elTruk.value.trim(), penerima: elPen.value.trim(),
+      tujuan: elTujuan.value.trim(),
       barang: elBarang.value.trim(), harga: parseKetatRp(elHarga.value),
       kendaraan: elKend.value.trim(), noSJ: elSJ.value.trim(),
       w: r.v, roll: r.roll, tonase: r.totalSen / 100,
@@ -1668,6 +1672,7 @@
     elTgl.value = rec.tanggal || todayISO();
     elTruk.value = rec.noTruk || "";
     elPen.value = rec.penerima || "";
+    elTujuan.value = rec.tujuan || "";
     elBarang.value = rec.barang || "";
     elHarga.value = (rec.harga == null) ? "" : String(rec.harga);
     elKend.value = rec.kendaraan || "";
@@ -2182,7 +2187,10 @@
 
       '<div class="ps-f ps-r36 ps-k1">PENERIMA</div>' +
       '<div class="ps-f ps-r36 ps-k2">=</div>' +
-      '<div class="ps-f ps-r36 ps-k3 nilai">' + esc(rec.penerima) + '</div>' +
+      /* Di Daftar Timbangan keduanya digabung: "Bp. Rifai Brebes" - di sana
+         memang hanya ada satu baris PENERIMA, tidak dipisah seperti di Nota. */
+      '<div class="ps-f ps-r36 ps-k3 nilai">' +
+        esc(rec.penerima + (rec.tujuan ? " " + rec.tujuan : "")) + '</div>' +
       '<div class="ps-f ps-r37 ps-k1">NO TRUK</div>' +
       '<div class="ps-f ps-r37 ps-k2">=</div>' +
       '<div class="ps-f ps-r37 ps-k3">' + esc(rec.noTruk) + '</div>' +
@@ -2276,9 +2284,11 @@
   function blokKanan(rec, atas){
     var X = DOK.kananX, LB = DOK.kananLab, J = DOK.kananJarak;
     var xi = X + LB, wi = DOK.W - xi;
+    /* Baris pertama memakai kota PERUSAHAAN (Rembang) untuk tanggal surat;
+       baris "Toko" memakai kota TUJUAN muat (Brebes). Keduanya berbeda. */
     var baris = [[kop.kota + ",", tglPanjang(rec.tanggal)],
                  ["Tuan", rec.penerima || ""],
-                 ["Toko", ""]];
+                 ["Toko", rec.tujuan || ""]];
     var s = "", i;
     for(i=0;i<3;i++){
       var y = atas + i*J;
@@ -2423,7 +2433,7 @@
       DOK: DOK, notaX: tepiKolom(NOTA_KOL), notaKol: NOTA_KOL,
       sjX: tepiKolom(SJ_KOL), sjKol: SJ_KOL,
       kop: kop, tanggalPanjang: tglPanjang(rec.tanggal),
-      penerima: rec.penerima, noTruk: rec.noTruk,
+      penerima: rec.penerima, tujuan: rec.tujuan, noTruk: rec.noTruk,
       barang: rec.barang, kendaraan: rec.kendaraan, noSJ: rec.noSJ,
       roll: m.roll, kgTeks: m.kgTeks,
       hargaTeks: fmtRp(rec.harga), rpTeks: fmtRp(m.rp),
@@ -2454,7 +2464,8 @@
         halaman.push(PDF.buat({
           kop: kop, nilaiTeks: nilaiTeks, jumlahKolom: jumlahKolom,
           roll: roll, tonaseTeks: fmtSen(totalSen),
-          penerima: rec.penerima, noTruk: rec.noTruk,
+          penerima: rec.penerima + (rec.tujuan ? " " + rec.tujuan : ""),
+          noTruk: rec.noTruk,
           tanggalPanjang: tglPanjang(rec.tanggal)
         }));
       }
