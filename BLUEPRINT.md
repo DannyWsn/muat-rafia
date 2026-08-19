@@ -2,7 +2,7 @@
 
 > Dokumen ini ditulis supaya sesi Claude berikutnya **langsung paham tanpa
 > bertanya-tanya**. Baca ini lebih dulu sebelum menyentuh kode.
-> Terakhir diperbarui: 19 Agustus 2026 · aplikasi `sw.js` v17.
+> Terakhir diperbarui: 20 Agustus 2026 · aplikasi `sw.js` v18.
 
 ---
 
@@ -13,7 +13,8 @@ menimbang roll satu per satu di HP, aplikasi menjumlahkan, lalu mencetak tiga
 dokumen yang **meniru blanko kertas milik pemilik**: Daftar Timbangan, Nota, dan
 Surat Jalan. Seluruh aplikasi adalah **satu berkas `index.html`** tanpa server,
 tanpa dependensi, diterbitkan sebagai halaman statis. Histori bisa disatukan
-antar-HP lewat satu Google Spreadsheet.
+antar-HP lewat satu Google Spreadsheet. Di layar utama HP aplikasinya bernama
+**WAC** (dari lambang WAVI ADHIKARI CENDANA).
 
 ---
 
@@ -29,13 +30,13 @@ antar-HP lewat satu Google Spreadsheet.
 | Panduan pemasangan | `C:\Users\danny\Downloads\Pusat Data Muat Rafia\PANDUAN.html` |
 
 **Alamat Web App dan Kode Pabrik SENGAJA tidak ditulis di sini** karena repo ini
-publik. Keduanya ada di Pengaturan aplikasi milik pemilik (tab Histori → Pusat
-Data). Jangan pernah menaruhnya di repo.
+publik. Keduanya ada di aplikasi milik pemilik (⚙ Pengaturan → Pusat Data).
+Jangan pernah menaruhnya di repo.
 
 ### Berkas di repo
 
 ```
-index.html               SELURUH aplikasi (2.958 baris) - tampilan, logika, mesin PDF
+index.html               SELURUH aplikasi (3.653 baris) - tampilan, logika, mesin PDF
 sw.js                    penyimpan luring; VERSI dinaikkan tiap kali diunggah
 manifest.webmanifest     supaya bisa dipasang sebagai aplikasi di HP
 icon-192/512/maskable    ikon
@@ -90,12 +91,35 @@ baru simpulkan.
 
 ### 4.1 Layar
 
+**Tiga layar**, dipilih dari bilah atas: tab **Input**, tab **Histori**, dan
+tombol **⚙ Pengaturan**. Sebelum 20 Agustus 2026 setelan berserakan — kop surat
+menempel di layar Input yang dipakai tiap hari, sedangkan Pusat Data, Cadangan,
+dan Cek Sistem berdesakan di atas daftar histori sehingga muat pertama baru
+terlihat setelah digulir **882 px**. Semuanya kini di ⚙ Pengaturan.
+
 - **Input** — kisi Daftar Timbangan 14 kolom × 10 baris = **140 roll**.
   Kolom diberi nama 10, 20, …, 140. Kotak diberi `data-cell="<nomor roll - 1>"`.
   Urutan DOM **tidak** sama dengan urutan nomor roll (kisi digambar per baris,
   nomor roll berjalan per kolom). Saat menulis pengujian, isi lewat
   `[data-cell="N"]`, jangan lewat urutan tampilan.
-- **Histori** — daftar muat tersimpan, Pusat Data, Cadangan Data, Cek Sistem.
+- **Histori** — HANYA daftar muat. Di atasnya satu bilah lengket 44px berisi
+  tombol cari (⌕) dan chip saring **Semua · Belum di pusat · Bulan ini**.
+  Kartu dikelompokkan per tanggal dengan total tonase hari itu.
+  Kartu memuat: nomor truk (atau "Tanpa nomor truk" kecil-miring), tanggal,
+  penerima · kota tujuan · barang, lalu tonase besar + roll + rupiah.
+  Tombolnya **Buka · PDF · (Kirim) · ⋯** semuanya **44 px**. **Hapus dan Cetak
+  ada di dalam menu ⋯**, supaya tombol perusak data tidak lagi berdempetan 7 px
+  dari tombol yang paling sering ditekan.
+  Keadaan terhadap pusat = warna pita kiri + titik: biru **ada di pusat**
+  (bertitel, tanpa tulisan — hemat satu baris di hampir semua kartu), kuning
+  **Menunggu terkirim**, abu **Hanya di HP ini** — dua yang terakhir TETAP
+  bertuliskan jelas karena perlu tindakan.
+- **⚙ Pengaturan** — daftar setelan bergaya aplikasi HP, tiap baris 56 px dan
+  keterangannya hidup (terbaca tanpa dibuka):
+  **Profil Perusahaan** (kop + pratinjau kop seperti tercetak),
+  **Rekening Transfer**, **Pusat Data**, **Cadangan Data**, **Cek Sistem**.
+  Panelnya bergantian lewat `bukaPanel(id)`; `data-panel` membuka,
+  `data-balik` kembali ke daftar.
 
 ### 4.2 Papan angka atas
 
@@ -128,7 +152,7 @@ Keputusan pemilik yang harus dihormati: harga manual, nomor SJ manual, dan
 penerima tetap **satu isian** (bukan dipecah Tuan/Toko), sedangkan kota tujuan
 berdiri sendiri di `i-tujuan`.
 
-### 4.4 Setelan (Pengaturan)
+### 4.4 Setelan (⚙ Pengaturan → Profil Perusahaan / Rekening Transfer)
 
 `k-nama` `k-al1` `k-al2` `k-al3` `k-kota` (kota perusahaan, untuk baris tanda
 tangan) `k-bank` `k-rek` `k-an` (rekening, dicetak di kolom Nama Barang pada
@@ -183,6 +207,28 @@ lalu bandingkan hasilnya berdampingan.
 
 Karena Helvetica lebih lebar dari Calibri, ukuran huruf pada jalur Cetak kadang
 perlu dinaikkan agar lebarnya sepadan (kop Nota: ×1,19). Ini disengaja.
+
+**Nama berkas PDF** (permintaan pemilik, 20 Agustus 2026):
+`<Penerima>-<tgl-bln-thn>-<JenisDokumen>.pdf` — contoh
+`Bp-Rifai-19-08-2026-Nota.pdf`. Lihat `dasarNama()`, `tglBerkas()`,
+`bersihNama()`, `namaBerkas()`.
+- Jenis dokumen **wajib** ikut di belakang. Tanpa itu, Nota dan Surat Jalan dari
+  muat yang sama bernama sama persis dan HP menyimpannya jadi `…(1).pdf`.
+- Penerima kosong → `Tanpa-Penerima`; nama > 40 huruf dipangkas.
+- Tanggal dibalik sesuai permintaan. Akibatnya daftar berkas di HP **tidak lagi
+  urut** menurut tanggal — sudah disampaikan ke pemilik.
+- Jalur **Cetak** ikut: Chrome mengambil nama "Simpan sebagai PDF" dari
+  `document.title`, jadi judul diganti sesaat sebelum `window.print()` lalu
+  dikembalikan lewat `afterprint` (+ jaring pengaman 60 detik).
+
+**Logo: dua berkas, sengaja.** Layar memakai PNG **tembus pandang**
+(`LOGO_LAYAR_URI`, 128×102, +31 KB) yang diambil dari lambang asli di dalam
+`MASTER RINCIAN MUATAN.xlsx` → `xl/media/image1.png` (569×493 RGBA, 81,6%
+piksel tembus, 0% putih pekat — alpha-nya asli, tidak perlu mengeruk putih).
+Cetak dan PDF **tetap** memakai `LOGO_URI` (JPEG beralas putih): di kertas
+tembus pandang tidak ada gunanya, dan mesin PDF menyisipkan JPEG langsung —
+menukarnya ke PNG bertopeng alpha berarti membongkar bagian yang hasil cetaknya
+sudah disetujui pemilik.
 
 ### 6.2 Pilihan dokumen
 
@@ -334,6 +380,22 @@ Semua ini pernah benar-benar terjadi di proyek ini.
     **Putus Sambungan** dengan konfirmasi.
 11. **`index.html` berakhiran baris CRLF.** Pencocokan teks multi-baris harus
     memakai `\r\n`. `sed -i` menghapus CRLF — jangan dipakai untuk berkas ini.
+    (Catatan: ada 2 baris komentar ber-LF tunggal sejak lama, di sekitar
+    `white-space:pre`. Bukan kerusakan baru.)
+12. **Media query yang ditaruh SEBELUM aturan yang dipengaruhinya tidak berbuat
+    apa-apa.** Aturan layar sempit sempat diletakkan di bagian bilah atas;
+    `.tab`, `.tabs`, dan `.gigi` ditulis lebih belakang sehingga menimpanya
+    (kekhususan sama — yang belakangan menang). Gejalanya menipu: `.brand-sub`
+    dan `font-size` ikut berubah, jadi seolah-olah media query bekerja.
+    Sekarang seluruh aturan layar sempit ada di **akhir stylesheet**.
+13. **Nama perusahaan menimpa tab "Input".** Setelah tombol ⚙ ditambahkan,
+    ruang nama menyempit. `.brand-txt` harus `flex:1 1 auto;min-width:0;
+    overflow:hidden` dan `.brand-name` harus `display:block`, kalau tidak
+    titik-tiga tidak pernah bekerja dan tulisannya bertumpuk.
+14. **`lapor()` pernah dipanggil dengan EMPAT argumen** pada tombol Unduh
+    Cadangan (`lapor(nama, blob, unduhBlob(...), "Cadangan")`) padahal hanya
+    menerima tiga — judul dialognya berbunyi "true siap" dan berkas terunduh
+    dua kali. Sudah diperbaiki 20 Agustus 2026.
 
 ---
 
@@ -356,6 +418,14 @@ lewat tombol seperti pemakai, lalu ukur keluarannya.**
 | `uji-ubah.mjs` | muat yang sudah di pusat lalu ditambah barang |
 | `uji-google.mjs` | uji ke pusat data Google **sungguhan** |
 | `ukur-memori.mjs` | ukuran satu muat, batas penyimpanan, izin permanen |
+| `uji-tahap23.mjs` | 17 pemeriksaan: logo layar PNG tembus pandang + nama berkas PDF dari berkas yang BENAR-BENAR terunduh |
+| `uji-tahap4.mjs` | 45 pemeriksaan: layar Pengaturan, cari/saring, kelompok tanggal, tombol 44px, menu ⋯, bilah atas di 320/360/412 |
+| `uji-cetak-sama.mjs` | **paritas cetak**: PDF sebelum vs sesudah perubahan, posisi tiap kata dibandingkan sampai 0,01 titik |
+
+⚠️ **`uji-pusat.mjs` dan `uji-aman.mjs` menuntut pusat tiruan yang BERSIH.**
+`tiruan-pusat.mjs` menyimpan data di memori, jadi kalau sudah dipakai uji lain
+lebih dulu, hitungannya berbeda dan tampak seperti kegagalan aplikasi —
+padahal cuma kontaminasi. Matikan lalu nyalakan ulang sebelum tiap skrip.
 
 **Dua HP diuji dengan dua proses Chrome ber-`--user-data-dir` berbeda.** Dua tab
 tidak cukup — penyimpanannya sama.
@@ -499,6 +569,19 @@ benar dan **jangan diubah**; yang boleh diperjelas hanya tulisannya, misalnya
 label "Sedang Isi" atau nilai "Roll ke-15". Kerjakan HANYA kalau diminta.
 
 ### E. Yang sudah selesai — jangan dikerjakan ulang
+
+**Dikerjakan 20 Agustus 2026** (disetujui pemilik, rancangannya di
+`Downloads\Rancangan Muat Rafia\`): Histori dirapikan; setelan pindah ke
+⚙ Pengaturan; nama berkas PDF ikut nama penerima; logo layar tembus pandang;
+ikon aplikasi diganti logo asli (alas putih); nama aplikasi jadi **WAC**.
+Dibuktikan: 17/17 + 45/45 pemeriksaan baru, 5/5 dokumen cetak identik sampai
+0,01 titik, dan uji lama tetap lulus (19/19 sinkron dua HP, 5/5 ubah-muat,
+9/9 roll, rupiah, setelan-hilang, keamanan data, ketelitian desimal).
+
+⚠️ **Pemilik perlu memasang ULANG aplikasi di HP** supaya nama dan ikon barunya
+muncul — Android menyimpan keduanya sejak pemasangan. Histori tidak ikut
+terhapus asal alamatnya sama, tetapi **Unduh Cadangan dulu** lebih aman.
+
 
 Daftar Timbangan/Nota/Surat Jalan sudah sesuai blanko dan diperiksa pemilik;
 rupiah hidup; pusat data dengan hak pemilik/operator; lima penangkal keamanan

@@ -1,6 +1,6 @@
 {
-  "name": "Kalkulator Muat Rafia",
-  "short_name": "Muat Rafia",
+  "name": "WAC",
+  "short_name": "WAC",
   "description": "Daftar timbangan muat rafia: hitung roll dan tonase, simpan histori, cetak PDF.",
   "lang": "id",
   "dir": "ltr",
