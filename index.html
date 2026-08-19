@@ -490,6 +490,7 @@
             <button class="btn mini" id="b-unggah" type="button">Kirim Semua Histori HP Ini</button>
             <button class="btn mini" id="b-tarik" type="button">Tarik Ulang Semua</button>
             <button class="btn mini" id="b-rapikan" type="button">Rapikan Muat Lama</button>
+            <button class="btn mini danger" id="b-putus" type="button">Putus Sambungan</button>
           </div>
         </div>
       </div>
@@ -1745,7 +1746,7 @@
   }
   function bolehHapus(){ return !pusatAktif() || pusat.peran === "pemilik"; }
 
-  function simpanPusat(){ writeLS(LS_PUSAT, pusat); }
+  function simpanPusat(){ return writeLS(LS_PUSAT, pusat); }
   function simpanAntre(){ writeLS(LS_ANTRE, antre); }
 
   function antreTambah(id){
@@ -1934,9 +1935,23 @@
     elUrl.value = pusat.url || "";
     elKode.value = pusat.kode || "";
 
+    function isiUlangKotak(){
+      elUrl.value = pusat.url || "";
+      elKode.value = pusat.kode || "";
+    }
+
+    /* Kotak yang KOSONG tidak boleh menghapus sambungan yang sudah jalan.
+       Di HP terlalu mudah mengosongkannya tanpa sengaja - salah sentuh lalu
+       tekan hapus, atau tahan-lalu-potong - dan pemakai lalu harus mengetik
+       ulang alamat panjang beserta kodenya. Memutus sambungan sekarang harus
+       lewat tombol tersendiri. */
     function simpanIsian(){
       var urlBaru = elUrl.value.trim();
       var kodeBaru = elKode.value.trim();
+      if((!urlBaru || !kodeBaru) && pusat.url && pusat.kode){
+        tulisStatusPusat();
+        return;                      /* sedang disunting - jangan disimpan dulu */
+      }
       /* Ganti alamat atau kode berarti pusatnya boleh jadi lain sama sekali,
          jadi penanda waktu dan peran dikosongkan supaya ditarik dari nol. */
       if(urlBaru !== pusat.url || kodeBaru !== pusat.kode){
@@ -1945,11 +1960,31 @@
       }
       pusat.url = urlBaru;
       pusat.kode = kodeBaru;
-      simpanPusat();
+      if(!simpanPusat()){
+        /* Jangan pernah membiarkan pemakai mengira sambungannya tersimpan
+           padahal tidak. */
+        toast("GAGAL menyimpan setelan — penyimpanan HP penuh");
+      }
       tulisStatusPusat();
     }
     elUrl.addEventListener("input", simpanIsian);
     elKode.addEventListener("input", simpanIsian);
+
+    /* Ditinggalkan dalam keadaan kosong? Kembalikan isinya, jangan dibiarkan
+       terlihat seperti sambungannya hilang. */
+    function pulihkanBilaKosong(){
+      if((!elUrl.value.trim() || !elKode.value.trim()) && pusat.url && pusat.kode){
+        isiUlangKotak();
+        toast("Sambungan tidak jadi dihapus — pakai tombol Putus Sambungan");
+      }
+    }
+    elUrl.addEventListener("blur", pulihkanBilaKosong);
+    elKode.addEventListener("blur", pulihkanBilaKosong);
+
+    /* Setelah pindah tab, isi kotak diselaraskan lagi dengan yang tersimpan. */
+    document.addEventListener("visibilitychange", function(){
+      if(!document.hidden) isiUlangKotak();
+    });
 
     document.getElementById("b-uji").addEventListener("click", function(){
       simpanIsian();
@@ -1991,6 +2026,28 @@
     /* Dipakai kalau Spreadsheet disunting langsung dengan tangan, atau kalau
        HP ini dicurigai ketinggalan. Penanda waktu dinolkan supaya seluruh isi
        pusat ditarik ulang, bukan hanya yang dianggap baru. */
+    /* Satu-satunya jalan memutus sambungan, dan harus disengaja. */
+    document.getElementById("b-putus").addEventListener("click", function(){
+      if(!pusatAktif()){ toast("Belum tersambung ke pusat"); return; }
+      var lokal = jumlahLokal();
+      dialog({
+        judul: "Putus sambungan ke pusat?",
+        isi: "<p>HP ini berhenti mengirim dan menerima dari pusat data. " +
+             "Histori yang sudah ada di HP ini <b>tidak dihapus</b>.</p>" +
+             (lokal ? "<p class=\"muted\"><b>" + lokal + " muat</b> belum pernah masuk pusat. " +
+                      "Sebaiknya kirim dulu sebelum memutus.</p>" : "") +
+             "<p class=\"muted\">Untuk menyambung lagi, alamat dan Kode Pabrik harus diisi ulang.</p>",
+        ya: "Putus", gaya: "danger",
+        onYa: function(){
+          pusat.url = ""; pusat.kode = ""; pusat.peran = ""; pusat.sejak = 0;
+          simpanPusat();
+          isiUlangKotak();
+          tulisStatusPusat();
+          toast("Sambungan diputus");
+        }
+      });
+    });
+
     document.getElementById("b-tarik").addEventListener("click", function(){
       if(!pusatAktif()){ toast("Pusat data belum diatur"); return; }
       dialog({

@@ -2,7 +2,7 @@
 
 > Dokumen ini ditulis supaya sesi Claude berikutnya **langsung paham tanpa
 > bertanya-tanya**. Baca ini lebih dulu sebelum menyentuh kode.
-> Terakhir diperbarui: 19 Agustus 2026 · aplikasi `sw.js` v16.
+> Terakhir diperbarui: 19 Agustus 2026 · aplikasi `sw.js` v17.
 
 ---
 
@@ -325,7 +325,14 @@ Semua ini pernah benar-benar terjadi di proyek ini.
    miring — pernah membuat `\d` menjadi `d` sehingga harga SELALU ditolak dan
    Nota selalu kosong. Untuk penyuntingan besar, **tulis berkas patch dengan
    alat Write lalu jalankan dengan node**, jangan `node -e` di dalam bash.
-10. **`index.html` berakhiran baris CRLF.** Pencocokan teks multi-baris harus
+10. **Setelan penting jangan disimpan pada setiap ketukan.** Alamat pusat dan
+    Kode Pabrik dulu ditimpa tiap `input`, sehingga kotak yang terkosongkan
+    TANPA SENGAJA di HP langsung menghapus sambungan. Benar-benar terjadi pada
+    HP rekan pemilik: histori utuh, tetapi alamat dan kode lenyap. Sekarang
+    kotak kosong tidak pernah menimpa sambungan yang ada, isinya dikembalikan
+    saat kotak ditinggalkan, dan memutus sambungan harus lewat tombol
+    **Putus Sambungan** dengan konfirmasi.
+11. **`index.html` berakhiran baris CRLF.** Pencocokan teks multi-baris harus
     memakai `\r\n`. `sed -i` menghapus CRLF — jangan dipakai untuk berkas ini.
 
 ---
@@ -447,3 +454,53 @@ curl -s "https://dannywsn.github.io/muat-rafia/index.html?cb=$RANDOM" | grep -c 
 
 GitHub Pages butuh ±1–3 menit. Selalu buktikan penanda baru benar-benar tersaji
 sebelum melapor selesai.
+
+---
+
+## 12. TUGAS UNTUK SESI CLAUDE BERIKUTNYA
+
+Urut menurut kepentingan. Yang di atas dikerjakan lebih dulu.
+
+### A. ⏰ INGATKAN PEMILIK — skrip Apps Script belum ditempel ulang
+
+**Ini bukan tugas coding, tetapi harus disebut di awal percakapan.** Skrip di
+`DownloadsPusat Data Muat RafiaKode-Apps-Script.gs` sudah berisi DUA hal
+baru yang belum ada di Google milik pemilik:
+
+1. kolom `tujuan` (Toko/Kota) — tanpa ini, kota tujuan tercetak di nota tetapi
+   **tidak tersimpan ke pusat**, sehingga HP lain tidak melihatnya
+2. pemicu `onEdit` — tanpa ini, koreksi yang diketik pemilik **langsung di
+   Spreadsheet tidak pernah sampai ke HP**
+
+Langkahnya ada di §10.1. Cara memastikan berhasil: ketik apa saja di sel baris
+muat lalu Enter — kolom `diubah` dan `diterima` di baris itu harus berubah
+sendiri dalam beberapa detik.
+
+### B. Sambungkan sekali-ketuk untuk HP operator
+
+Pemilik harus mengetik alamat panjang dan Kode Pabrik di tiap HP operator.
+Rencana: tombol **Buat Tautan Sambungan** di HP pemilik yang menghasilkan
+tautan berisi alamat + kode pada bagian `#` (tidak terkirim ke server), lalu
+dibagikan lewat WhatsApp. Operator cukup menekannya, aplikasi menawarkan
+menyambung, menguji, dan menyimpan. Perlu diingat: kodenya ikut lewat
+WhatsApp — sampaikan itu ke pemilik sebelum dibangun.
+
+### C. Stok dan produksi + ekspor Excel
+
+Rencana besar pemilik, rinciannya di §10.3. Formatnya SUDAH ADA di
+`MASTER RINCIAN MUATAN.xlsx` (lembar REKAP PRODUKSI dan TUTUP BUKU) — bongkar
+angkanya dari sana, jangan mengarang. Minta pemilik mengirim berkas bulan
+berjalan yang **sudah terisi data asli** lebih dulu.
+
+### D. Kalau diminta: perjelas tulisan kotak POSISI
+
+Pemilik sempat mengira "Roll 15" pada kotak POSISI adalah total roll. Angkanya
+benar dan **jangan diubah**; yang boleh diperjelas hanya tulisannya, misalnya
+label "Sedang Isi" atau nilai "Roll ke-15". Kerjakan HANYA kalau diminta.
+
+### E. Yang sudah selesai — jangan dikerjakan ulang
+
+Daftar Timbangan/Nota/Surat Jalan sudah sesuai blanko dan diperiksa pemilik;
+rupiah hidup; pusat data dengan hak pemilik/operator; lima penangkal keamanan
+data (§10.2); dan perbaikan sambungan yang bisa terhapus tanpa sengaja
+(jebakan no. 10). Semuanya sudah diuji dan diunggah.
