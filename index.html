@@ -2030,7 +2030,14 @@
     for(i=0;i<dariPusat.length;i++){
       var m = dariPusat[i];
       if(!m || !m.id) continue;
+      var posLama = peta[m.id];
       m.tanggal = normalTgl(m.tanggal);   /* lihat catatan di normalTgl */
+      /* Kalau tanggal kiriman TIDAK TERBACA (mis. ada yang mengetik "besok"
+         di sel Spreadsheet), tanggal lokal yang sudah benar dipertahankan -
+         jangan sampai suntingan tangan menghapus tanggal di semua HP. */
+      if(!m.tanggal && posLama != null && list[posLama].tanggal){
+        m.tanggal = list[posLama].tanggal;
+      }
       if(antre.indexOf(m.id) >= 0) continue;      /* punya HP ini belum terkirim, jangan ditimpa */
       var pos = peta[m.id];
       if(m.dihapus){
@@ -3401,11 +3408,22 @@
       var teruskan = function(){
         if(mode === "pdf") simpanPDF(rec, kode); else cetakLangsung(rec, kode);
       };
+      /* Satu dialog untuk semua yang akan tercetak kosong, supaya tidak
+         menambah ketukan kalau dua-duanya belum diisi. */
+      var pesan = "";
+      if(!rec.tanggal){
+        pesan += "<p><b>Tanggal belum diisi</b> — baris tanggal di atas tanda " +
+                 "tangan akan tercetak <b>kosong</b>. Isi dulu di kotak " +
+                 "<b>Tanggal</b> kalau dokumen ini dipakai sebagai bukti.</p>";
+      }
       if(perluHarga && rec.harga == null){
+        pesan += "<p><b>Harga belum diisi</b> — kolom <b>Harga @</b> dan " +
+                 "<b>Jumlah</b> pada Nota akan tercetak <b>kosong</b>, bukan nol.</p>";
+      }
+      if(pesan){
         dialog({
-          judul: "Harga belum diisi",
-          isi: "<p>Kolom <b>Harga @</b> dan <b>Jumlah</b> pada Nota akan tercetak " +
-               "<b>kosong</b>, bukan nol. Isi harga dulu di layar Hitung kalau ingin lengkap.</p>",
+          judul: "Ada yang tercetak kosong",
+          isi: pesan,
           ya: "Tetap lanjut", onYa: teruskan
         });
         return;

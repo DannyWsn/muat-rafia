@@ -1,0 +1,9 @@
+# Keluaran pengujian, bukan sumber: potret, PDF, dan berkas sementara yang
+# ditulis skrip saat dijalankan dari folder ini.
+*.png
+*.pdf
+*.txt
+*.jpg
+skrip*.js
+# TAPI acuan cetak WAJIB ikut - itu penjaga hasil cetak.
+!acuan-cetak/*.json

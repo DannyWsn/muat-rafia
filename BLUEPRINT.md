@@ -2,7 +2,7 @@
 
 > Dokumen ini ditulis supaya sesi Claude berikutnya **langsung paham tanpa
 > bertanya-tanya**. Baca ini lebih dulu sebelum menyentuh kode.
-> Terakhir diperbarui: 20 Agustus 2026 · aplikasi `sw.js` v20.
+> Terakhir diperbarui: 20 Agustus 2026 · aplikasi `sw.js` v21.
 
 ---
 
@@ -41,6 +41,8 @@ sw.js                    penyimpan luring; VERSI dinaikkan tiap kali diunggah
 manifest.webmanifest     supaya bisa dipasang sebagai aplikasi di HP
 icon-192/512/maskable    ikon
 BLUEPRINT.md             berkas ini
+uji/                     skrip pengujian - BACA uji/README.md
+uji/acuan-cetak/         sidik jari posisi kata, penjaga hasil cetak
 ```
 
 **Aturan mengunggah:** setiap kali `index.html` berubah, naikkan `var VERSI` di
@@ -421,37 +423,31 @@ Semua ini pernah benar-benar terjadi di proyek ini.
 
 ## 9. PENGUJIAN
 
-Skrip di scratchpad sesi ini (Agustus 2026). Kalau hilang, tulis ulang dengan
-pola yang sama: **jalankan aplikasi sungguhan di Chrome lewat CDP, kendalikan
-lewat tombol seperti pemakai, lalu ukur keluarannya.**
+**Skripnya sekarang PERMANEN di `uji/`, ikut repo.** Sebelum 20 Agustus 2026
+skripnya hanya ada di folder sementara Windows dan bisa hilang kapan saja —
+padahal itu satu-satunya cara membuktikan hasil cetak tidak bergeser.
 
-| Skrip | Membuktikan |
-|---|---|
-| `periksa.mjs` | ketelitian desimal (999.999 nilai + 200.000 daftar acak) |
-| `uji-cetak.mjs` | tiap baris & kolom Daftar Timbangan vs angka Excel |
-| `uji-print-asli.mjs` | jalur cetak sungguhan lewat `Page.printToPDF` |
-| `ambil-pdf.mjs` | menangkap PDF dari tombol Simpan PDF |
-| `uji-roll.mjs` | roll = kotak terisi (termasuk kasus ada yang dilewati) |
-| `uji-rupiah.mjs` | rupiah hidup, termasuk harga diisi di tengah jalan |
-| `tiruan-pusat.mjs` | tiruan Apps Script untuk menguji sinkron tanpa Google |
-| `uji-pusat.mjs` | 19 pemeriksaan sinkron dengan **dua HP** (dua Chrome terpisah) |
-| `uji-ubah.mjs` | muat yang sudah di pusat lalu ditambah barang |
-| `uji-google.mjs` | uji ke pusat data Google **sungguhan** |
-| `ukur-memori.mjs` | ukuran satu muat, batas penyimpanan, izin permanen |
-| `uji-tahap23.mjs` | 17 pemeriksaan: logo layar PNG tembus pandang + nama berkas PDF dari berkas yang BENAR-BENAR terunduh |
-| `uji-tahap4.mjs` | 45 pemeriksaan: layar Pengaturan, cari/saring, kelompok tanggal, tombol 44px, menu ⋯, bilah atas di 320/360/412 |
-| `uji-cetak-sama.mjs` | **paritas cetak**: PDF sebelum vs sesudah perubahan, posisi tiap kata dibandingkan sampai 0,01 titik |
-| `cek-pusat-baca.mjs` | periksa pusat SUNGGUHAN tanpa menulis apa pun (peran, kolom yang dikirim, isi terbaru) |
-| `uji-tanggal-sembuh.mjs` | 8 pemeriksaan: tanggal bentuk Sheets masuk lewat jalur sinkron dan keluar sebagai YYYY-MM-DD |
-| `uji-sembuhkan.mjs` | 8 pemeriksaan: HP yang SUDAH berisi tanggal rusak sembuh sendiri saat dibuka |
+**Baca `uji/README.md`** — di situ ada daftar lengkapnya, cara menjalankan, dan
+dua jebakan yang mudah membuat salah paham (pusat tiruan harus bersih; dua HP
+harus dua proses Chrome, bukan dua tab).
 
-⚠️ **`uji-pusat.mjs` dan `uji-aman.mjs` menuntut pusat tiruan yang BERSIH.**
-`tiruan-pusat.mjs` menyimpan data di memori, jadi kalau sudah dipakai uji lain
-lebih dulu, hitungannya berbeda dan tampak seperti kegagalan aplikasi —
-padahal cuma kontaminasi. Matikan lalu nyalakan ulang sebelum tiap skrip.
+Yang paling penting, jalankan setiap kali menyentuh cetak:
 
-**Dua HP diuji dengan dua proses Chrome ber-`--user-data-dir` berbeda.** Dua tab
-tidak cukup — penyimpanannya sama.
+```bash
+node uji/cetak-paritas.mjs
+```
+
+Kelima dokumen dihasilkan dari aplikasi sungguhan, lalu posisi SETIAP kata
+dibandingkan dengan sidik jari acuan di `uji/acuan-cetak/`. Satu titik pun
+bergeser = GAGAL. `--rekam` merekam acuan baru — **hanya kalau perubahan hasil
+cetak memang disengaja dan sudah diperiksa pemilik.**
+
+⚠️ Skrip yang menguji ke **pusat Google sungguhan** berisi alamat Web App dan
+Kode Pabrik, jadi SENGAJA disimpan di luar repo yang publik, di
+`Downloads\Muat Rafia (skrip uji)\`. Jangan pernah dipindah ke dalam repo.
+
+Cara kerjanya semuanya sama: **jalankan aplikasi sungguhan di Chrome lewat CDP,
+kendalikan lewat tombol seperti pemakai, lalu ukur keluarannya.**
 
 ---
 
