@@ -887,6 +887,20 @@
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
     return m ? m[3] + " " + BULAN[parseInt(m[2],10)-1] + " " + m[1] : "";
   }
+  /* Tanggal dari pusat TIDAK selalu "YYYY-MM-DD". Google Sheets mengubah teks
+     tanggal menjadi Date, dan Apps Script mengirim String(sel) sehingga menjadi
+     "Tue Aug 18 2026 00:00:00 GMT+0700 (Waktu Indonesia Barat)". Semua bentuk
+     dikembalikan ke YYYY-MM-DD di gerbang masuk, supaya kartu, kelompok
+     tanggal, urutan daftar, nama berkas, dan hasil cetak tidak pernah kosong. */
+  function normalTgl(x){
+    var t = String(x == null ? "" : x).trim();
+    if(!t) return "";
+    if(/^d{4}-d{2}-d{2}$/.test(t)) return t;
+    var d = new Date(t);
+    if(isNaN(d.getTime())) return "";
+    var p = function(n){ return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
   function tglPendek(iso){
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
     return m ? m[3] + "/" + m[2] + "/" + m[1] : "";
@@ -2016,6 +2030,7 @@
     for(i=0;i<dariPusat.length;i++){
       var m = dariPusat[i];
       if(!m || !m.id) continue;
+      m.tanggal = normalTgl(m.tanggal);   /* lihat catatan di normalTgl */
       if(antre.indexOf(m.id) >= 0) continue;      /* punya HP ini belum terkirim, jangan ditimpa */
       var pos = peta[m.id];
       if(m.dihapus){
