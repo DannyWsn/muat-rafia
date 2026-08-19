@@ -3653,14 +3653,40 @@
     });
   }
 
+  /* Menyembuhkan tanggal yang sudah rusak di HP ini.
+     normalTgl() di terapkanMuat hanya menjaga gerbang masuk; muat yang sudah
+     tersimpan sebelum perbaikan itu tetap rusak dan TIDAK akan dikirim ulang
+     oleh pusat (pusat hanya mengirim yang "diterima"-nya lebih baru).
+     Bentuk rusaknya masih terbaca ("Tue Aug 18 2026 ..."), jadi tanggalnya
+     dipulihkan - bukan ditebak. Hanya menulis kalau ada yang berubah. */
+  function sembuhkanTanggal(){
+    var list = histAll(), ubah = 0, i;
+    for(i=0;i<list.length;i++){
+      var lama = list[i].tanggal;
+      var baru = normalTgl(lama);
+      if(baru !== String(lama == null ? "" : lama)){ list[i].tanggal = baru; ubah++; }
+    }
+    if(ubah) writeLS(LS_HIST, list);
+
+    /* muat yang sedang dikerjakan ikut diperiksa */
+    var d = readLS(LS_DRAFT, null);
+    if(d && d.tanggal){
+      var db = normalTgl(d.tanggal);
+      if(db !== String(d.tanggal)){ d.tanggal = db; writeLS(LS_DRAFT, d); }
+    }
+    return ubah;
+  }
+
   /* ---------- init ---------- */
   paintBrand();
+  var disembuhkan = sembuhkanTanggal();
   var draft = readLS(LS_DRAFT, null);
   apply(draft || {tanggal: todayISO()});
   renderHist();
   tersimpanKeHistori = !(draft && draft.roll && !draft.id);
   tandaiSimpan();
   if(draft && draft.roll && !draft.id) toast("Melanjutkan muat yang belum disimpan");
+  else if(disembuhkan) toast(disembuhkan + " muat: tanggalnya dipulihkan");
 })();
 </script>
 
