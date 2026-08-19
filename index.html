@@ -1788,17 +1788,34 @@
         pusat.peran = j.peran || "";
         var tolakId = {};
         (j.ditolak || []).forEach(function(t){ tolakId[t.id] = t.sebab; });
-        /* yang diterima keluar dari antrean; yang ditolak tetap di HP */
-        antre = antre.filter(function(id){ return !!tolakId[id]; });
-        hapusAntre = hapusAntre.filter(function(m){ return !!tolakId[m.id]; });
+        /* Semuanya keluar dari antrean, termasuk yang DITOLAK. Menahan yang
+           ditolak berarti mencobanya terus selamanya, padahal pusat tidak
+           akan pernah menerimanya - sementara HP diam-diam menyimpan versi
+           yang berbeda dari pusat. Yang ditolak ditangani di bawah. */
+        var adaTolakan = (j.ditolak || []).length > 0;
+        antre = [];
+        hapusAntre = [];
         simpanAntre();
         writeLS(LS_HAPUS, hapusAntre);
+        if(adaTolakan){
+          /* Pusat yang menang: tarik ulang seluruhnya supaya versi lokal
+             yang ditolak ditimpa versi pusat, tidak dibiarkan menyimpang. */
+          pusat.sejak = 0;
+        }
         terapkanMuat(j.muat || []);
         pusat.sejak = j.waktu || Date.now();
         simpanPusat();
         renderHist();
-        if((j.ditolak || []).length && !diam){
-          toast((j.ditolak.length) + " muat ditolak pusat — " + j.ditolak[0].sebab);
+        if((j.ditolak || []).length){
+          var t0 = j.ditolak[0];
+          dialog({
+            judul: "Perubahan ditolak pusat",
+            isi: "<p><b>" + j.ditolak.length + " muat</b> tidak bisa disimpan ke pusat: <b>" +
+                 esc(t0.sebab) + "</b>.</p>" +
+                 "<p class=\"muted\">Isi dari pusat dipakai kembali supaya semua HP tetap sama. " +
+                 "Kalau perubahan itu memang perlu, mintakan lewat HP pemilik.</p>",
+            ya: "Mengerti", tanpaBatal: true
+          });
         }
         tulisStatusPusat();
         return true;
@@ -2778,8 +2795,12 @@
        paling baru bila muat yang sama disunting di dua HP. */
     rec.diubah = Date.now();
     var list = histAll();
-    var adaDiHistori = rec.id && list.some(function(x){ return x.id === rec.id; });
+    var lamaRec = rec.id ? list.filter(function(x){ return x.id === rec.id; })[0] : null;
+    var adaDiHistori = !!lamaRec;
     if(adaDiHistori){
+      /* `oleh` menandai HP pembuat baris di pusat. Harus ikut terbawa,
+         kalau tidak aplikasi mengira muat ini belum pernah masuk pusat. */
+      if(lamaRec.oleh) rec.oleh = lamaRec.oleh;
       list = list.map(function(x){ return x.id === rec.id ? rec : x; });
     }else{
       /* Termasuk bila muat yang sedang dibuka ternyata sudah dihapus pemilik
@@ -2807,6 +2828,20 @@
     /* Kalau pusat data belum diatur, tidak ada yang perlu ditanyakan. */
     if(!pusatAktif()){
       toast("Muat tersimpan ke histori");
+      return;
+    }
+
+    /* Sudah pernah masuk pusat? Perubahannya WAJIB ikut, tanpa bertanya -
+       kalau tidak, pusat menyimpan versi lama sementara HP menyimpan versi
+       baru, dan keduanya berbeda diam-diam. Pertanyaan di bawah hanya untuk
+       muat yang memang belum pernah masuk pusat. */
+    var sudahDiPusat = adaDiHistori &&
+      (!!(lamaRec && lamaRec.oleh) || antre.indexOf(rec.id) >= 0);
+    if(sudahDiPusat){
+      antreTambah(rec.id);
+      renderHist();
+      toast("Perubahan dikirim ke pusat");
+      sinkron(true);
       return;
     }
 
