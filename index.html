@@ -322,6 +322,10 @@
      perubahan kop harus terlihat SEBELUM kertas dipakai. */
   .s-pra{background:#fff;border:1px solid var(--line);border-radius:2px;padding:9px 10px;
     display:flex;gap:9px;align-items:center;margin-bottom:11px}
+  /* Kode Pabrik disembunyikan; tombol Lihat di sampingnya. */
+  .kode-baris{display:flex;gap:7px;align-items:stretch}
+  .kode-baris input{flex:1;min-width:0}
+  .kode-baris .btn{flex:none;white-space:nowrap}
   .s-pra img{width:52px;height:42px;object-fit:contain;flex:none}
   .s-pra-t{min-width:0;text-align:center;flex:1}
   .s-pra-t b{display:block;font-family:var(--f-cond);font-weight:700;font-size:13px;
@@ -709,7 +713,14 @@
         <p class="muted">Kalau diatur, histori semua HP menjadi satu dan sama. Menimbang tetap jalan tanpa internet; data terkirim sendiri begitu ada sinyal.</p>
         <div class="fields">
           <label class="f wide"><span class="f-lab">Alamat Pusat Data</span><input type="text" id="s-url" placeholder="https://script.google.com/macros/s/..../exec" autocapitalize="off" spellcheck="false"></label>
-          <label class="f wide"><span class="f-lab">Kode Pabrik</span><input type="text" id="s-kode" placeholder="kode dari pemilik" autocapitalize="off" spellcheck="false"></label>
+          <label class="f wide"><span class="f-lab">Kode Pabrik</span>
+            <span class="kode-baris">
+              <input type="password" id="s-kode" placeholder="kode dari pemilik"
+                     autocapitalize="off" autocomplete="off" spellcheck="false">
+              <button class="btn mini" id="b-lihat-kode" type="button"
+                      aria-pressed="false">Lihat</button>
+            </span>
+          </label>
         </div>
         <div class="row-btn">
           <button class="btn mini" id="b-uji" type="button">Uji Sambungan</button>
@@ -2198,6 +2209,19 @@
     function isiUlangKotak(){
       elUrl.value = pusat.url || "";
       elKode.value = pusat.kode || "";
+    }
+
+    /* Kode Pabrik membuka seluruh histori - nama penerima, kota tujuan, harga
+       per kg. Karena itu tidak ditampilkan begitu saja di HP yang bisa dilihat
+       siapa pun. Tombol ini untuk pemilik yang memang perlu membacanya. */
+    var bLihat = document.getElementById("b-lihat-kode");
+    if(bLihat){
+      bLihat.addEventListener("click", function(){
+        var buka = elKode.type === "password";
+        elKode.type = buka ? "text" : "password";
+        bLihat.textContent = buka ? "Sembunyikan" : "Lihat";
+        bLihat.setAttribute("aria-pressed", String(buka));
+      });
     }
 
     /* Kotak yang KOSONG tidak boleh menghapus sambungan yang sudah jalan.
